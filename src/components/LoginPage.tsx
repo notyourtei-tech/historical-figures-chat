@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { User as UserIcon, ShieldCheck, Lock, ArrowRight, Loader2, CheckCircle2, ArrowLeft, UserPlus, Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { User as UserIcon, Lock, ArrowRight, Loader2, CheckCircle2, ArrowLeft, UserPlus, Info } from 'lucide-react';
 import { User } from '../types';
 
 interface Props {

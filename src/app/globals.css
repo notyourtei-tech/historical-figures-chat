@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 45 65% 53%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 45 65% 53%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 45 65% 53%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 45 65% 53%;
+    --radius: 0.75rem;
+    --gold-gradient: linear-gradient(135deg, #D4AF37 0%, #F5D76E 50%, #D4AF37 100%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    background-image: 
+      radial-gradient(circle at 50% 50%, rgba(212,175,55,0.03) 0%, transparent 100%),
+      url('https://www.transparenttextures.com/patterns/dark-matter.png');
+  }
+}
+
+.glass {
+  background: rgba(15, 15, 15, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+.gold-text {
+  @apply bg-clip-text text-transparent bg-gold-gradient;
+}
+
+.gold-border {
+  border: 1px solid transparent;
+  background-image: linear-gradient(rgba(26, 26, 26, 0.6), rgba(26, 26, 26, 0.6)), var(--gold-gradient);
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+}
+
+/* 历史质感元素 */
+.paper-texture {
+  background-image: url('https://www.transparenttextures.com/patterns/papyros.png');
+}
+
+.ink-wash {
+  mask-image: radial-gradient(circle at center, black 50%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle at center, black 50%, transparent 100%);
+}
+
+.historical-card {
+  @apply relative overflow-hidden transition-all duration-700;
+  background: linear-gradient(145deg, rgba(20, 20, 20, 0.9), rgba(10, 10, 10, 0.95));
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+}
+
+.historical-card::before {
+  content: "";
+  @apply absolute inset-0 opacity-0 transition-opacity duration-700 pointer-events-none;
+  background-image: url('https://www.transparenttextures.com/patterns/black-paper.png');
+}
+
+.historical-card:hover::before {
+  @apply opacity-20;
+}
+
+.historical-card::after {
+  content: "";
+  @apply absolute -inset-[100%] opacity-0 transition-opacity duration-700 pointer-events-none;
+  background: radial-gradient(circle at center, rgba(212,175,55,0.1) 0%, transparent 70%);
+}
+
+.historical-card:hover::after {
+  @apply opacity-100;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary/20 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary/40;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.2) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.2);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.4);
+}

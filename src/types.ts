@@ -1,34 +1,22 @@
-export type MBTIType = string; // e.g., 'INTJ', 'ENFP'
-
-export interface Question {
-  id: number;
-  text: string;
-  options: {
-    label: string;
-    value: string; // 'E', 'I', 'S', 'N', 'T', 'F', 'J', 'P'
-  }[];
-}
+export type Category = '哲学家' | '科学家' | '文学家' | '政治家' | '军事家' | '企业家' | '艺术家' | '探险家' | '神职人员' | '弈者' | '智者' | '政治军事领袖';
+export type Era = '上古' | '春秋' | '战国' | '秦' | '古典时代' | '古希腊' | '古罗马' | '中世纪' | '文艺复兴' | '启蒙运动' | '近代' | '现代';
+export type Language = 'zh' | 'en' | 'ja' | 'vi' | 'my';
 
 export interface Celebrity {
   id: string;
-  name: string;
-  title: string;
-  mbti: MBTIType;
-  description: string;
+  name: { [key in Language]: string };
+  title: { [key in Language]: string };
+  category: Category;
+  era: Era;
+  origin: { [key in Language]: string };
+  description: { [key in Language]: string };
   avatar: string;
-  tone: string; // Instructions for AI tone
-  origin: string; // "China", "Ancient Greece", etc.
-  keyWorks?: string[]; // Representative works or sources
-  personalityTraits?: string[]; // Specific personality markers
-  historicalEvents?: string[]; // Key life events or anecdotes
-}
-
-export interface User {
-  id: string;
-  username: string;
-  password?: string; // 仅用于本地模拟存储验证
-  nickname?: string;
-  avatar?: string;
+  tone: { [key in Language]: string };
+  coreThoughts: { [key in Language]: string[] };
+  keyWorks: { [key in Language]: string[] };
+  personalityTraits: { [key in Language]: string[] };
+  expertise: { [key in Language]: string[] };
+  interests: string[]; // 用于匹配用户兴趣的标签，如 "围棋", "占卜", "物理", "绘画"
 }
 
 export interface Message {
@@ -38,7 +26,9 @@ export interface Message {
   timestamp: number;
 }
 
-export interface AuthState {
-  user: User | null;
-  loading: boolean;
+export interface UserProfile {
+  name: string;
+  interests: string[];
+  language: Language;
+  mbti?: string;
 }

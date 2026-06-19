@@ -16,69 +16,65 @@ async function callChatApi(
     body: JSON.stringify(body),
   });
 
-  const data = (await response.json()) as ChatApiResult;
-  if (!response.ok && !data.error) {
-    return { success: false, error: "SERVER_ERROR", content: `HTTP ${response.status}` };
+  const raw = await response.text();
+
+  try {
+    const data = JSON.parse(raw) as ChatApiResult;
+    if (!response.ok && !data.error) {
+      return { success: false, error: "SERVER_ERROR", content: `HTTP ${response.status}` };
+    }
+    return data;
+  } catch {
+    return { success: false, error: "INVALID_RESPONSE", content: raw };
   }
-  return data;
-}
-
-function formatError(language: Language, error?: string, detail?: string): string {
-  const errorDetail = detail ? `\n(${detail})` : "";
-
-  if (error === "MISSING_API_KEY") {
-    const messages: Record<Language, string> = {
-      zh: `【灵犀未启】请在 .env.local 中配置 API Key（OPENROUTER_API_KEY 或 DEEPSEEK_API_KEY），保存后重启 npm run dev。${errorDetail}`,
-      en: `[Soul Unbound] Configure API Key in .env.local (OPENROUTER_API_KEY or DEEPSEEK_API_KEY), then restart npm run dev.${errorDetail}`,
-      ja: `【霊感未踏】.env.local に API Key を設定し、npm run dev を再起動してください。${errorDetail}`,
-      vi: `[Linh hồn chưa mở] Cấu hình API Key trong .env.local và khởi động lại npm run dev.${errorDetail}`,
-      my: `[ဝိညာဉ်မနိုးသေးပါ] .env.local တွင် API Key ထည့်ပြီး npm run dev ကို restart လုပ်ပါ။${errorDetail}`,
-    };
-    return messages[language];
-  }
-
-  const messages: Record<Language, string> = {
-    zh: `【灵犀受阻】AI 连接失败，请检查网络或 API 配置。${errorDetail}`,
-    en: `[Soul Blocked] AI connection failed. Check network or API config.${errorDetail}`,
-    ja: `【霊感遮断】AI 接続に失敗しました。${errorDetail}`,
-    vi: `[Linh hồn bị chặn] Kết nối AI thất bại.${errorDetail}`,
-    my: `[ဝိညာဉ်ပိတ်ဆို့နေသည်] AI ချိတ်ဆက်မှု မအောင်မြင်ပါ။${errorDetail}`,
-  };
-  return messages[language];
 }
 
 export async function chatWithCelebrity(
   celebrity: Celebrity,
   messages: Message[],
   language: Language = "zh"
-) {
-  try {
-    const result = await callChatApi("/api/chat", { celebrity, messages, language });
+): Promise<string> {
+  const result = await callChatApi("/api/chat", { celebrity, messages, language });
 
-    if (result.success && result.content) {
-      return result.content;
-    }
-
-    return formatError(language, result.error, result.content);
-  } catch (error: unknown) {
-    console.error("AI Chat Error:", error);
-    const detail = error instanceof Error ? error.message : String(error);
-    return formatError(language, "SERVER_ERROR", detail);
+  if (result.success && result.content) {
+    return result.content;
   }
+
+  const errorMsgs: Record<string, Record<Language, string>> = {
+    MISSING_API_KEY: {
+      zh: "【系统提示】请在 .env.local 中配置 API Key（OPENROUTER_API_KEY 或 DEEPSEEK_API_KEY），保存后重启开发服务器。",
+      en: "[System] Please configure API Key in .env.local (OPENROUTER_API_KEY or DEEPSEEK_API_KEY), then restart dev server.",
+      ja: "【システム】.env.local に API Key を設定し、開発サーバーを再起動してください。",
+      vi: "[Hệ thống] Vui lòng cấu hình API Key trong .env.local và khởi động lại server.",
+      my: "[စနစ်] .env.local တွင် API Key ထည့်ပြီး server ကို ပြန်စတင်ပါ။"
+    },
+    API_CALL_FAILED: {
+      zh: `【连接失败】${result.content || "AI API 请求失败，请检查网络或 API Key 配置。"}`,
+      en: `[Connection Failed] ${result.content || "AI API request failed. Check network or API Key."}`,
+      ja: `【接続失敗】${result.content || "AI API リクエストに失敗しました。"}`,
+      vi: `[Kết nối thất bại] ${result.content || "Yêu cầu AI API thất bại."}`,
+      my: `[ချိတ်ဆက်မှုမအောင်မြင်] ${result.content || "AI API တောင်းဆိုမှုမအောင်မြင်ပါ။"}`
+    },
+    INVALID_RESPONSE: {
+      zh: "【响应错误】API 返回了无效响应，请稍后重试。",
+      en: "[Response Error] API returned invalid response. Please try again later.",
+      ja: "【応答エラー】API から無効な応答が返されました。",
+      vi: "[Lỗi phản hồi] API trả về phản hồi không hợp lệ.",
+      my: "[တုံ့ပြန်မှုအမှား] API က မှားယွင်းတဲ့တုံ့ပြန်မှုပြန်ပေးလိုက်ပါတယ်။"
+    }
+  };
+
+  const errorType = result.error || "API_CALL_FAILED";
+  return errorMsgs[errorType]?.[language] || errorMsgs.API_CALL_FAILED[language];
 }
 
 export async function getInitialGreeting(
   celebrity: Celebrity,
   language: Language = "zh"
-) {
-  try {
-    const result = await callChatApi("/api/greeting", { celebrity, language });
-    if (result.success && result.content) {
-      return result.content;
-    }
-    return null;
-  } catch (error) {
-    console.error("Initial Greeting Error:", error);
-    return null;
+): Promise<string | null> {
+  const result = await callChatApi("/api/greeting", { celebrity, language });
+  if (result.success && result.content) {
+    return result.content;
   }
+  return null;
 }

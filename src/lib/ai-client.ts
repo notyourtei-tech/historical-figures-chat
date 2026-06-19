@@ -22,6 +22,10 @@ function isValidKey(key?: string): key is string {
   return !!key && !PLACEHOLDER_KEYS.has(key.trim());
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 interface ProviderSpec {
   name: string;
   apiKey: string;
@@ -33,6 +37,7 @@ interface ProviderSpec {
 function getProviderSpecs(): ProviderSpec[] {
   const providers: ProviderSpec[] = [];
 
+  // 只保留 OpenRouter
   const openrouterKey = process.env.OPENROUTER_API_KEY;
   if (isValidKey(openrouterKey)) {
     providers.push({
@@ -40,43 +45,17 @@ function getProviderSpecs(): ProviderSpec[] {
       apiKey: openrouterKey,
       baseURL: "https://openrouter.ai/api/v1",
       models: [
-        process.env.OPENROUTER_MODEL || "google/gemma-4-26b-a4b-it:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "qwen/qwen3-coder:free",
         "google/gemma-4-31b-it:free",
-        "openrouter/free",
-        "liquid/lfm-2.5-1.2b-instruct:free",
+        "nousresearch/hermes-3-llama-3.1-405b:free",
+        "nvidia/nemotron-3-super-120b-a12b:free",
+        "openai/gpt-oss-120b:free",
       ],
       headers: {
         "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-        "X-Title": "Ancient Wisdom Chat",
+        "X-Title": "Ancient-Wisdom-Chat",
       },
-    });
-  }
-
-  const deepseekKey =
-    process.env.DEEPSEEK_API_KEY || process.env.VITE_AI_API_KEY;
-  if (isValidKey(deepseekKey)) {
-    providers.push({
-      name: "deepseek",
-      apiKey: deepseekKey,
-      baseURL:
-        process.env.DEEPSEEK_BASE_URL ||
-        process.env.VITE_AI_BASE_URL ||
-        "https://api.deepseek.com/v1",
-      models: [
-        process.env.DEEPSEEK_MODEL ||
-          process.env.VITE_AI_MODEL ||
-          "deepseek-chat",
-      ],
-    });
-  }
-
-  const openaiKey = process.env.OPENAI_API_KEY;
-  if (isValidKey(openaiKey)) {
-    providers.push({
-      name: "openai",
-      apiKey: openaiKey,
-      baseURL: "https://api.openai.com/v1",
-      models: [process.env.OPENAI_MODEL || "gpt-4o-mini"],
     });
   }
 
@@ -120,6 +99,10 @@ async function requestCompletion(
     const raw = await response.text();
 
     if (!response.ok) {
+      // 特别处理 429 错误，让它更容易被识别
+      if (response.status === 429) {
+        throw new Error(`RATE_LIMIT_429: ${raw.slice(0, 300)}`);
+      }
       throw new Error(`${response.status} ${raw.slice(0, 300)}`);
     }
 
@@ -151,19 +134,33 @@ export async function callChatCompletion(
   if (providers.length === 0) return null;
 
   let lastError = "";
+  let isRateLimited = false;
 
   for (const provider of providers) {
     for (const model of provider.models) {
       try {
         console.log(`[AI] 尝试 ${provider.name}/${model}`);
-        return await requestCompletion(provider, model, messages, options);
+        const result = await requestCompletion(provider, model, messages, options);
+        console.log(`[AI] 成功使用 ${model}`);
+        return result;
       } catch (error: unknown) {
         const message =
           error instanceof Error ? error.message : String(error);
         lastError = message;
-        console.warn(`[AI] ${provider.name}/${model} 失败:`, message.slice(0, 160));
+
+        // 检查是否是速率限制错误
+        if (message.startsWith("RATE_LIMIT_429:")) {
+          isRateLimited = true;
+          console.warn(`[AI] ${provider.name}/${model} 触发速率限制，尝试下一个模型...`);
+        } else {
+          console.warn(`[AI] ${provider.name}/${model} 失败:`, message.slice(0, 160));
+        }
       }
     }
+  }
+
+  if (isRateLimited) {
+    throw new Error("RATE_LIMIT_EXCEEDED: 免费模型的调用次数暂时用完了，请稍后再试，或者升级您的 OpenRouter 账户。");
   }
 
   if (lastError) throw new Error(lastError);

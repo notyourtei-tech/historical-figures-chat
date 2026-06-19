@@ -60,6 +60,8 @@ export const translations: Record<Language, Record<string, string>> = {
     interest_match: "兴趣匹配",
     mbti_match: "性格匹配",
     rights_reserved: "保留所有权利",
+    error_ai_failed: "抱歉，先贤未能回应您的问题。请稍后再试。",
+    error_rate_limit: "免费模型的调用次数暂时用完了，请稍后再试，或者升级您的 OpenRouter 账户。",
   },
   en: {
     app_name: "Epochs of Wisdom",
@@ -120,6 +122,8 @@ export const translations: Record<Language, Record<string, string>> = {
     interest_match: "Interest match",
     mbti_match: "Personality match",
     rights_reserved: "All rights reserved",
+    error_ai_failed: "Sorry, the sage could not respond to your question. Please try again later.",
+    error_rate_limit: "The free model quota is temporarily exhausted. Please try again later or upgrade your OpenRouter account.",
   },
   ja: {
     app_name: "万古灵犀",
@@ -180,6 +184,8 @@ export const translations: Record<Language, Record<string, string>> = {
     interest_match: "興味マッチ",
     mbti_match: "性格マッチ",
     rights_reserved: "All rights reserved",
+    error_ai_failed: "申し訳ありません。先賢がご質問にお答えできませんでした。後でもう一度お試しください。",
+    error_rate_limit: "フリーモデルの利用回数が一時的に不足しています。後でもう一度お試しいただくか、OpenRouterアカウントをアップグレードしてください。",
   },
   vi: {
     app_name: "Vạn Cổ Linh Hy",
@@ -240,6 +246,8 @@ export const translations: Record<Language, Record<string, string>> = {
     interest_match: "Khớp sở thích",
     mbti_match: "Khớp tính cách",
     rights_reserved: "Bảo lưu mọi quyền",
+    error_ai_failed: "Xin lỗi, tiên tri không thể trả lời câu hỏi của bạn. Vui lòng thử lại sau.",
+    error_rate_limit: "Hạn mức miễn phí tạm thời đã hết. Vui lòng thử lại sau hoặc nâng cấp tài khoản OpenRouter của bạn.",
   },
   my: {
     app_name: "ထောင်ပေါင်းချီသော ဉာဏ်ရည်",
@@ -300,6 +308,8 @@ export const translations: Record<Language, Record<string, string>> = {
     interest_match: "စိတ်ဝင်စားမှု ကိုက်ညီ",
     mbti_match: "စရိုက် ကိုက်ညီ",
     rights_reserved: "မူပိုင်ခွင့်များ လက်ဝယ်ထား",
+    error_ai_failed: "ကျေးဇူးတင်ပါတယ်။ ပညာရှင်က သင့်မေးခွန်းကို မဖြေလို့မရပါဘူး။ နောက်ပိုင်းမှာ ထပ်ကြိုးစားကြည့်ပါ။",
+    error_rate_limit: "အခမဲ့မော်ဒယ်၏ အသုံးပြုမှုကိုကန့်သတ်ချက်ကို ကျော်လွန်လိုက်ပါတယ်။ နောက်ပိုင်းမှာ ထပ်ကြိုးစားကြည့်ပါ၊ သို့မဟုတ် သင့် OpenRouter အကောင့်ကို အဆင့်မြှင့်တင်ပါ။",
   },
 };
 

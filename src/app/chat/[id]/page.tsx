@@ -51,45 +51,33 @@ export default function ChatPage() {
           setMessages(JSON.parse(savedMessages));
         } else {
           // 如果没有历史记录，则获取初始欢迎语
-          const fetchGreeting = async () => {
-            setIsLoading(true);
-            try {
-              const greetingText = await getInitialGreeting(found, language);
-              const greeting: Message = {
-                id: "1",
-                role: "assistant",
-                content:
-                  greetingText ||
-                  `【${found.name[language]}】\n\n${t("input_placeholder")}`,
-                timestamp: Date.now(),
-              };
-              setMessages([greeting]);
-            } catch (error) {
-              console.error("Failed to fetch greeting:", error);
-              // 备选方案：直接使用本地默认语
-              const defaultGreeting: Message = {
-                id: "1",
-                role: "assistant",
-                content: `【${found.name[language]}】\n\n${t("input_placeholder")}`,
-                timestamp: Date.now(),
-              };
-              setMessages([defaultGreeting]);
-            } finally {
-              setIsLoading(false);
-            }
-          };
+            const fetchGreeting = async () => {
+              setIsLoading(true);
+              try {
+                const greetingText = await getInitialGreeting(found, language);
+                if (greetingText) {
+                  const greeting: Message = {
+                    id: "1",
+                    role: "assistant",
+                    content: greetingText,
+                    timestamp: Date.now(),
+                  };
+                  setMessages([greeting]);
+                } else {
+                  setMessages([]);
+                }
+              } catch (error) {
+                console.error("Failed to fetch greeting:", error);
+                setMessages([]);
+              } finally {
+                setIsLoading(false);
+              }
+            };
           fetchGreeting();
         }
       } catch (error) {
         console.error("Failed to load chat history:", error);
-        // 即使加载历史记录失败，也显示默认欢迎语
-        const defaultGreeting: Message = {
-          id: "1",
-          role: "assistant",
-          content: `【${found.name[language]}】\n\n${t("input_placeholder")}`,
-          timestamp: Date.now(),
-        };
-        setMessages([defaultGreeting]);
+        setMessages([]);
       }
     } else {
       router.push("/");
@@ -122,16 +110,18 @@ export default function ChatPage() {
       setIsLoading(true);
       try {
         const greetingText = await getInitialGreeting(celebrity, language);
-        setMessages([
-          {
-            id: "1",
-            role: "assistant",
-            content:
-              greetingText ||
-              `【${celebrity.name[language]}】\n\n${t("input_placeholder")}`,
-            timestamp: Date.now(),
-          },
-        ]);
+        if (greetingText) {
+          setMessages([
+            {
+              id: "1",
+              role: "assistant",
+              content: greetingText,
+              timestamp: Date.now(),
+            },
+          ]);
+        } else {
+          setMessages([]);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -165,6 +155,23 @@ export default function ChatPage() {
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error(error);
+      
+      // 检查错误是否是速率限制
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      let userFriendlyMessage = t("error_ai_failed");
+      
+      if (errorMessage.includes("RATE_LIMIT_EXCEEDED") || errorMessage.includes("速率限制") || errorMessage.includes("rate limit")) {
+        userFriendlyMessage = t("error_rate_limit");
+      }
+      
+      const errorMessageObj: Message = {
+        id: `error_${Date.now()}`,
+        role: "assistant",
+        content: userFriendlyMessage,
+        timestamp: Date.now(),
+      };
+
+      setMessages(prev => [...prev, errorMessageObj]);
     } finally {
       setIsLoading(false);
     }

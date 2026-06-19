@@ -27,6 +27,7 @@ import { Language } from "@/types";
 export default function HomePage() {
   const { language, setLanguage, userProfile, updateUserProfile, t, languageLabel } =
     useLanguage();
+
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showMbtiModal, setShowMbtiModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");

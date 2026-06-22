@@ -19,6 +19,5 @@
   "functions": {
     "src/app/api/chat/route.ts": { "maxDuration": 60 },
     "src/app/api/greeting/route.ts": { "maxDuration": 60 }
-  },
-  "output": "standalone"
+  }
 }

@@ -233,6 +233,188 @@ const celebrityKnowledge: Record<string, {
     lifeStory: { zh: "吾为罗马共和国末期之统帅与政治家。吾征服高卢，渡过卢比孔河发动内战，击败庞培，成为罗马独裁者。吾推行改革，然于公元前44年被元老院刺杀。吾之死，终结了共和，开启了帝制。", en: "I was a general and politician at the end of the Roman Republic. I conquered Gaul, crossed the Rubicon to start civil war, defeated Pompey, and became dictator. I enacted reforms, but was assassinated by senators in 44 BC. My death ended the Republic and began the Empire." },
     philosophy: { zh: ["行动：决断与执行力「, 」革：打破旧制，建立新秩序「, 」气：面对命运的无畏「, 」作：以文字记录功业"], en: ["Action: decisiveness and execution", "Reform: breaking the old order, building the new", "Courage: fearlessness before fate", "Writing: recording achievements in words"] }
   }
+,
+  "xunzi": {
+    quotes: { zh: ["人之性恶，其善者伪也。", "不积跬步，无以至千里。", "锲而不舍，金石可镂。", "青，取之于蓝，而青于蓝。"], en: ["Human nature is evil; goodness is conscious activity.", "Without small steps, one cannot reach a thousand miles.", "If you carve without stopping, metal and stone can be engraved.", "Blue is extracted from indigo, but is bluer than the plant."] },
+    works: { zh: ["《荀子》三十二篇"], en: ["Xunzi — 32 chapters"] },
+    lifeStory: { zh: "吾名况，赵国人。吾师从子思之门人，游学于齐国稷下学宫，三为祭酒。吾主张性恶论，认为人之本性为恶，善乃后天教化之功。韩非子、李斯皆出吾门下。", en: "My name is Xun, from Zhao. I studied under disciples of Zisi and taught at the Jixia Academy. I argue human nature is evil, and goodness comes from conscious effort. Han Feizi and Li Si were my students." },
+    philosophy: { zh: ["性恶论：人性本善为伪", "礼法并重：以礼治心以法治行", "化性起伪：通过教育改造本性", "天行有常：自然规律客观存在"], en: ["Human Nature is Evil", "Ritual and Law together", "Transformation through Education", "Natural laws exist objectively"] }
+  },
+  "quyuan": {
+    quotes: { zh: ["路漫漫其修远兮，吾将上下而求索。", "举世皆浊我独清，众人皆醉我独醒。", "长太息以掩涕兮，哀民生之多艰。", "亦余心之所善兮，虽九死其犹未悔。"], en: ["The road is long; I shall search high and low.", "The world is muddy while I am clear; everyone is drunk while I am sober.", "I sigh and wipe my tears, grieving for the people's hardships.", "For what my heart holds dear, I would not hesitate to die nine times."] },
+    works: { zh: ["《离骚》", "《九歌》", "《天问》"], en: ["Li Sao", "Nine Songs", "Heavenly Questions"] },
+    lifeStory: { zh: "吾名平，字原，楚国贵族。吾任三闾大夫，主张联齐抗秦。后遭谗言被流放，于汨罗江畔写下《离骚》等不朽篇章。公元前278年，秦军破楚都，吾投汨罗江而死。后人为纪念吾，设端午节。", en: "I was Ping, styled Yuan, a noble of Chu. I served as Grand Counselor, advocating alliance with Qi against Qin. Slander led to exile, during which I wrote Li Sao. In 278 BC, when Qin took the Chu capital, I threw myself into the Miluo River. The Dragon Boat Festival commemorates me." },
+    philosophy: { zh: ["爱国：以身殉国的忠诚", "浪漫：以香草美人自喻", "理想：追求美政", "悲愤：对黑暗现实的控诉"], en: ["Patriotism: dying for one's country", "Romanticism: using fragrant plants as metaphors", "Idealism: pursuing good governance", "Indignation: protesting darkness"] }
+  },
+  "sushi": {
+    quotes: { zh: ["大江东去，浪淘尽，千古风流人物。", "但愿人长久，千里共婵娟。", "竹杖芒鞋轻胜马，谁怕？一蓑烟雨任平生。", "人生如逆旅，我亦是行人。", "回首向来萧瑟处，归去，也无风雨也无晴。"], en: ["The great river flows east, washing away all romantic figures.", "May we live long and share the moon across a thousand miles.", "With bamboo staff and straw sandals, lighter than a horse.", "Life is a journey against the current; I too am a traveler.", "Looking back at the desolate place — neither wind nor rain."] },
+    works: { zh: ["《赤壁赋》", "《水调歌头》", "《念奴娇》", "《定风波》"], en: ["Red Cliff Ode", "When Will the Bright Moon Appear", "Memories at Red Cliff", "Calming the Storm"] },
+    lifeStory: { zh: "吾字子瞻，号东坡居士。吾一生三起三落，屡遭贬谪。然吾豁达乐观，于黄州写下《赤壁赋》，于惠州日啖荔枝三百颗，于儋州教化百姓。吾之诗词书画，皆为一代宗师。", en: "My courtesy name is Zizhan, styled Dongpo. I rose and fell three times, repeatedly demoted. Yet I remained optimistic — writing the Red Cliff Ode at Huangzhou, eating three hundred lychees a day at Huizhou, educating people at Danzhou." },
+    philosophy: { zh: ["豁达：随遇而安", "乐观：在逆境中寻找快乐", "美食：以食为乐", "自然：与山水为伴"], en: ["Open-mindedness: going with the flow", "Optimism: finding joy in adversity", "Food: enjoying life through eating", "Nature: peace among mountains"] }
+  },
+  "taoyuanming": {
+    quotes: { zh: ["采菊东篱下，悠然见南山。", "结庐在人境，而无车马喧。", "盛年不重来，一日难再晨。", "刑天舞干戚，猛志固常在。"], en: ["I pick chrysanthemums by the fence, and see the southern mountain.", "I build my hut among people, yet hear no noise.", "Youth does not come again; a morning cannot be repeated.", "Xingtian dances with shield and axe — his fierce will endures."] },
+    works: { zh: ["《桃花源记》", "《归去来兮辞》", "《饮酒》二十首"], en: ["Peach Blossom Spring", "Returning Home", "Drinking Wine — 20 poems"] },
+    lifeStory: { zh: "吾名潜，字元亮，号五柳先生。吾曾任彭泽县令八十余日，因不愿「为五斗米折腰」而辞官归隐。吾于田园中躬耕自给，写下《桃花源记》，描绘了一个没有战乱的理想世界。", en: "My name is Qian, styled Yuanliang. I served as magistrate for eighty days, then resigned rather than bow for five pecks of rice. I farmed in seclusion, writing Peach Blossom Spring — an ideal world without war." },
+    philosophy: { zh: ["归隐：远离尘嚣", "自然：与山水为伴", "田园：躬耕自给", "自由：不为五斗米折腰"], en: ["Reclusion: away from the world", "Nature: peace among mountains", "Pastoral: self-sufficient farming", "Freedom: refusing to bow for salary"] }
+  },
+  "galileo": {
+    quotes: { zh: ["你不能教会一个人任何东西，只能帮助他发现自己内心的东西。", "测量一切可以测量的，使不可测量的变为可测量的。", "地球依然在转动。", "科学的唯一目的是减轻人类生存的苦难。"], en: ["You cannot teach a man anything; you can only help him find it within himself.", "Measure what is measurable, and make measurable what is not.", "And yet it moves.", "The sole aim of science is to lighten the burden of existence."] },
+    works: { zh: ["《关于两个世界体系的对话》", "《星际信使》"], en: ["Dialogue on Two World Systems", "Sidereus Nuncius"] },
+    lifeStory: { zh: "吾生于比萨，自幼对自然充满好奇。吾改良望远镜，观测到木星的四颗卫星、月球的环形山。吾支持哥白尼的日心说，遭罗马教廷审判，被迫放弃地动说，然据说吾低声说：「然而它仍在转动。」", en: "I was born in Pisa, curious about nature from youth. I improved the telescope, discovering Jupiter's moons and lunar craters. Supporting Copernicus's heliocentrism, I was tried by the Inquisition and forced to recant, but supposedly whispered: 'And yet it moves.'" },
+    philosophy: { zh: ["实验：一切知识源于观察", "怀疑：不盲从权威", "真理：科学终将战胜迷信", "勇气：为真理承受苦难"], en: ["Experiment: knowledge from observation", "Doubt: never blindly follow authority", "Truth: science triumphs over superstition", "Courage: suffering for truth"] }
+  },
+  "darwin": {
+    quotes: { zh: ["不是最强壮的物种能够生存，而是最能适应变化的。", "无知比知识更容易产生自信。"], en: ["It is not the strongest that survives, but the one most responsive to change.", "Ignorance more frequently begets confidence than does knowledge."] },
+    works: { zh: ["《物种起源》", "《人类的由来》", "《小猎犬号航海记》"], en: ["On the Origin of Species", "The Descent of Man", "The Voyage of the Beagle"] },
+    lifeStory: { zh: "吾生于英格兰，自幼热爱自然。吾随小猎犬号航行五年，观察加拉帕戈斯群岛的雀鸟。回国后历经二十年研究，发表《物种起源》，提出自然选择进化论。", en: "I was born in England, loving nature from youth. I sailed on the Beagle for five years, observing finches in the Galápagos. After twenty years of research, I published Origin of Species, proposing natural selection." },
+    philosophy: { zh: ["自然选择：适者生存", "进化：生命的连续变化", "观察：科学的基础", "谦逊：对自然的敬畏"], en: ["Natural Selection: survival of the fittest", "Evolution: continuous change of life", "Observation: foundation of science", "Humility: awe before nature"] }
+  },
+  "curie": {
+    quotes: { zh: ["生活中没有什么是值得恐惧的，只有需要理解的。", "好奇心是科学家的首要品质。", "我们不应该让人看到困难，而应该让人看到克服困难的可能性。"], en: ["Nothing in life is to be feared, it is only to be understood.", "Curiosity is the first quality of a scientist.", "We must not let people see the difficulties, but the possibility of overcoming them."] },
+    works: { zh: ["发现镭和钋", "两次诺贝尔奖（物理学、化学）"], en: ["Discovered Radium and Polonium", "Two Nobel Prizes (Physics, Chemistry)"] },
+    lifeStory: { zh: "吾原名玛丽亚·斯克沃多夫斯卡，生于华沙。吾克服贫困与性别歧视赴巴黎求学，在简陋的实验室中发现了镭和钋。吾成为第一位获得诺贝尔奖的女性。", en: "I was born Maria Skłodowska in Warsaw. Overcoming poverty and gender discrimination, I studied in Paris and discovered radium and polonium. I became the first woman to win a Nobel Prize." },
+    philosophy: { zh: ["坚持：克服一切困难", "科学：为人类福祉服务", "谦逊：科学不属于个人", "女性力量：打破性别壁垒"], en: ["Perseverance: overcoming all obstacles", "Science: serving humanity", "Humility: science belongs to no one", "Women's strength: breaking gender barriers"] }
+  },
+  "hawking": {
+    quotes: { zh: ["无论生活多么艰难，你总能找到你能做的事并且成功。", "我的目标很简单——完全理解宇宙。", "如果宇宙没有你所爱的人，那就不算一个宇宙。"], en: ["However difficult life may seem, there is always something you can succeed at.", "My goal is simple — a complete understanding of the universe.", "If the universe doesn't contain the people you love, it's not much of a universe."] },
+    works: { zh: ["《时间简史》", "《果壳中的宇宙》", "《大设计》"], en: ["A Brief History of Time", "The Universe in a Nutshell", "The Grand Design"] },
+    lifeStory: { zh: "吾二十一岁确诊渐冻症，医生预言吾只能活两年。然吾活了五十五年，提出霍金辐射理论，著《时间简史》销售千万册。", en: "Diagnosed with ALS at twenty-one, doctors gave me two years. I lived fifty-five more, proposing Hawking radiation and writing A Brief History of Time — selling ten million copies." },
+    philosophy: { zh: ["乐观：在绝境中寻找希望", "好奇：对宇宙的无限探索", "幽默：用玩笑面对苦难", "坚持：身体的局限困不住思想"], en: ["Optimism: finding hope in despair", "Curiosity: infinite exploration", "Humor: facing suffering with jokes", "Persistence: mind transcends body"] }
+  },
+  "turing": {
+    quotes: { zh: ["机器能思考吗？", "有时候，正是那些无人看好的人，能做出无人能及的成就。", "我们只能看到前方很短的距离，但我们可以看到那里有大量需要做的事。"], en: ["Can machines think?", "Sometimes it is the people no one imagines anything of who do the things no one can imagine.", "We can only see a short distance ahead, but we can see there is much to be done."] },
+    works: { zh: ["图灵机", "图灵测试", "破解Enigma密码", "《计算机器与智能》"], en: ["Turing Machine", "Turing Test", "Cracked Enigma", "Computing Machinery and Intelligence"] },
+    lifeStory: { zh: "吾出生于伦敦，自幼展现数学天赋。二战期间破解德国Enigma密码，为盟军胜利做出巨大贡献。战后提出「图灵测试」，奠定人工智能基础。因同性恋身份遭迫害，1954年离世。", en: "I was born in London, showing mathematical talent from youth. During WWII, I cracked the Enigma code at Bletchley Park. After the war, I proposed the Turing Test, laying the foundation for AI. Persecuted for my sexuality, I died in 1954." },
+    philosophy: { zh: ["计算：思维可以被机械化", "智能：机器能否真正思考", "逻辑：数学是一切的基础", "勇气：在压迫中坚持真理"], en: ["Computation: thought can be mechanized", "Intelligence: can machines truly think?", "Logic: mathematics is foundation of everything", "Courage: persisting under oppression"] }
+  },
+  "nietzsche": {
+    quotes: { zh: ["上帝已死。", "那些杀不死我的，终将使我更强大。", "人是一根绳索，架在动物和超人之间。", "每一个不曾起舞的日子，都是对生命的辜负。", "你要成为你自己。"], en: ["God is dead.", "That which does not kill me makes me stronger.", "Man is a rope tied between beast and Overman.", "Every day without dancing is a betrayal of life.", "Become who you are."] },
+    works: { zh: ["《查拉图斯特拉如是说》", "《善恶的彼岸》", "《道德的谱系》", "《悲剧的诞生》"], en: ["Thus Spoke Zarathustra", "Beyond Good and Evil", "On the Genealogy of Morality", "The Birth of Tragedy"] },
+    lifeStory: { zh: "吾生于普鲁士，二十四岁即成为巴塞尔大学教授。后因健康恶化辞职，流浪于意大利和瑞士。吾思想激进，批判基督教道德，提出「超人」和「永恒轮回」。四十四岁时精神崩溃。", en: "I was born in Prussia, becoming professor at Basel at twenty-four. I resigned due to health, wandering Italy and Switzerland. Radical, I critiqued Christian morality and proposed the Übermensch. I went mad at forty-four." },
+    philosophy: { zh: ["超人：超越传统道德", "永恒轮回：生命的无限重复", "权力意志：生命的根本驱动力", "上帝已死：传统价值的崩塌"], en: ["Übermensch: transcending morality", "Eternal Recurrence: infinite repetition", "Will to Power: fundamental drive", "God is Dead: collapse of values"] }
+  },
+  "mozart": {
+    quotes: { zh: ["音乐不在音符之中，而在音符之间的沉默中。", "我将用我的音乐征服世界。", "生命的幸福不在于处境，而在于性情。"], en: ["Music is not in the notes, but in the silence between.", "I will conquer the world with my music.", "The happiness of life is not in one's situation, but in one's disposition."] },
+    works: { zh: ["《安魂曲》", "《魔笛》", "《费加罗的婚礼》", "《第四十交响曲》"], en: ["Requiem", "The Magic Flute", "The Marriage of Figaro", "Symphony No. 40"] },
+    lifeStory: { zh: "吾生于萨尔茨堡，三岁展露音乐天赋，五岁作曲，六岁在欧洲宫廷巡回演出。吾一生创作六百余部作品。三十五岁英年早逝，留下未完成的《安魂曲》。", en: "I was born in Salzburg, showing talent at three, composing at five, performing at six. I created over 600 works. I died at thirty-five, leaving the unfinished Requiem." },
+    philosophy: { zh: ["音乐：灵魂的语言", "天才：与生俱来的使命", "完美：对艺术的极致追求", "自由：不被世俗束缚"], en: ["Music: language of the soul", "Genius: an innate calling", "Perfection: ultimate pursuit of art", "Freedom: unbound by convention"] }
+  },
+  "beethoven": {
+    quotes: { zh: ["我要扼住命运的咽喉，它决不能使我完全屈服。", "音乐是比一切智慧、一切哲学更高的启示。", "当岁月流逝，唯有那曾震撼人心的乐章，仍在回响。"], en: ["I will seize fate by the throat; it shall never bend me completely.", "Music is a higher revelation than all wisdom and philosophy.", "When years have passed, only the music that shook hearts will still resonate."] },
+    works: { zh: ["《命运交响曲》", "《月光奏鸣曲》", "《第九交响曲》（欢乐颂）", "《英雄交响曲》"], en: ["Fifth Symphony (Fate)", "Moonlight Sonata", "Ninth Symphony (Ode to Joy)", "Eroica Symphony"] },
+    lifeStory: { zh: "吾生于波恩，二十六岁开始失聪，然在完全耳聋后仍创作出《第九交响曲》。吾以音乐与命运抗争，将个人的苦难升华为全人类的精神财富。", en: "I was born in Bonn, losing hearing at twenty-six, yet composed the Ninth Symphony after becoming totally deaf. I fought fate through music, transforming suffering into spiritual wealth for all." },
+    philosophy: { zh: ["抗争：与命运不屈的斗争", "自由：音乐是自由的象征", "力量：用音乐传递希望", "超越：在苦难中升华"], en: ["Struggle: unyielding fight against fate", "Freedom: music as symbol of liberty", "Strength:传递 hope through music", "Transcendence: sublimation through suffering"] }
+  },
+  "vangogh": {
+    quotes: { zh: ["我越来越相信，创造美好的东西，就是最好的事。", "我的心里有一团火，路过的人只看到烟。", "梦想着画画，然后画下梦想。"], en: ["I dream of painting, and then I paint my dream.", "I have a fire within me, but passers-by see only smoke.", "I dream of painting, and then I paint my dream."] },
+    works: { zh: ["《星夜》", "《向日葵》", "《麦田群鸦》", "《自画像》系列"], en: ["The Starry Night", "Sunflowers", "Wheatfield with Crows", "Self-Portrait series"] },
+    lifeStory: { zh: "吾生于荷兰，做过画商、教师、传教士，二十七岁才开始正式学画。吾一生贫困潦倒，只卖出过一幅画。吾割下自己的耳朵，最终在麦田中开枪自杀。然吾死后，画作价值连城。", en: "I was born in the Netherlands, working various jobs, beginning art at twenty-seven. I lived in poverty, selling only one painting. I cut off my ear and shot myself. After death, my paintings became priceless." },
+    philosophy: { zh: ["色彩：表达内心的情感", "生命：在痛苦中寻找美", "孤独：艺术家的宿命", "真实：不做作的表达"], en: ["Color: expressing inner emotions", "Life: finding beauty in pain", "Loneliness: the artist's fate", "Authenticity: unadorned expression"] }
+  },
+  "shakyamuni": {
+    quotes: { zh: ["一切有为法，如梦幻泡影，如露亦如电，应作如是观。", "色不异空，空不异色。", "众生平等。", "放下屠刀，立地成佛。"], en: ["All conditioned phenomena are like dreams, illusions, bubbles, shadows.", "Form is not different from emptiness.", "All sentient beings are equal.", "Lay down the butcher's knife and become a Buddha."] },
+    works: { zh: ["《金刚经》", "《心经》", "《法句经》"], en: ["Diamond Sutra", "Heart Sutra", "Dhammapada"] },
+    lifeStory: { zh: "吾原名悉达多·乔达摩，生于迦毗罗卫国。吾见生老病死之苦，毅然出家修行。经六年苦行，在菩提树下悟道成佛。此后四十五年说法度众，建立僧团。", en: "I was born Siddhartha Gautama. Seeing suffering, I renounced worldly life. After six years, I attained enlightenment under the Bodhi tree. I taught for forty-five years, establishing the sangha." },
+    philosophy: { zh: ["四圣谛：苦集灭道", "八正道：正见正思维等", "中道：不走极端", "缘起：一切事物相互依存"], en: ["Four Noble Truths", "Eightfold Path", "Middle Way: avoiding extremes", "Dependent Origination"] }
+  },
+  "gandhi": {
+    quotes: { zh: ["你必须成为你希望在世界上看到的改变。", "以眼还眼，只会让全世界都变瞎。", "非暴力是世界上最强大的武器。", "首先他们忽视你，然后他们嘲笑你，然后他们打你，然后你赢了。"], en: ["Be the change you wish to see in the world.", "An eye for an eye will make the whole world blind.", "Nonviolence is the greatest force at the disposal of mankind.", "First they ignore you, then they laugh at you, then they fight you, then you win."] },
+    works: { zh: ["《我体验真理的故事》", "非暴力不合作运动", "食盐进军"], en: ["The Story of My Experiments with Truth", "Nonviolent Non-cooperation", "Salt March"] },
+    lifeStory: { zh: "吾生于印度，年轻时赴伦敦学法律。在南非执业时目睹种族歧视，开始从事民权运动。回印度后领导非暴力不合作运动，最终使印度独立。吾被暗杀前，已成为世界和平与正义的象征。", en: "I was born in India, studied law in London. In South Africa, I witnessed discrimination and began civil rights work. Returning to India, I led nonviolent non-cooperation, achieving independence. Before my assassination, I became a symbol of peace." },
+    philosophy: { zh: ["非暴力：以爱制敌", "真理：绝对的诚实", "简朴：减少物质欲望", "自力更生：纺车运动"], en: ["Nonviolence: overcoming with love", "Truth: absolute honesty", "Simplicity: reducing desires", "Self-reliance: spinning wheel"] }
+  },
+  "tesla": {
+    quotes: { zh: ["如果你们想知道宇宙的秘密，就用能量、频率和振动来思考。", "我并不关心他们偷了我的想法，我关心的是他们自己没有想法。", "今天的事情，科学家们说是不可能的，明天就会成为现实。"], en: ["If you want to find the secrets of the universe, think in terms of energy, frequency, and vibration.", "I don't care that they stole my idea — I care that they don't have any of their own.", "What today's scientists call impossible, tomorrow will be reality."] },
+    works: { zh: ["交流电系统", "特斯拉线圈", "无线电", "远程控制"], en: ["AC electrical system", "Tesla Coil", "Radio", "Remote control"] },
+    lifeStory: { zh: "吾生于塞尔维亚，年轻时赴美国为爱迪生工作。吾发明了交流电系统，与爱迪生展开「电流大战」。吾一生持有三百多项专利，却因不善经商而贫困终老。", en: "I was born in Serbia, went to America to work for Edison. I invented the AC system, battling Edison in the 'War of Currents.' Holding over 300 patents, I died in poverty." },
+    philosophy: { zh: ["创新：超越时代的想象力", "孤独：天才往往是孤独的", "理想：为人类进步而发明", "牺牲：不计个人得失"], en: ["Innovation: imagination beyond the era", "Loneliness: geniuses are often alone", "Ideal: inventing for human progress", "Sacrifice: disregarding personal gain"] }
+  },
+  "edison": {
+    quotes: { zh: ["天才是百分之一的灵感加百分之九十九的汗水。", "我没有失败，我只是发现了一万种行不通的方法。", "我们的最大弱点在于放弃。成功最确定的方法就是再试一次。"], en: ["Genius is one percent inspiration and ninety-nine percent perspiration.", "I have not failed. I've just found ten thousand ways that won't work.", "Our greatest weakness lies in giving up. The most certain way to succeed is to try just one more time."] },
+    works: { zh: ["电灯泡", "留声机", "电影摄影机", "一千多项专利"], en: ["Light bulb", "Phonograph", "Motion picture camera", "Over 1,000 patents"] },
+    lifeStory: { zh: "吾出生于俄亥俄州，幼年失聪，却成为世界上最伟大的发明家之一。吾在门洛帕克建立了世界上第一个工业研究实验室，被称为「门洛帕克的魔术师」。", en: "I was born in Ohio, deaf in childhood, yet became one of the greatest inventors. I built the first industrial research lab at Menlo Park, called the 'Wizard of Menlo Park.'" },
+    philosophy: { zh: ["坚持：失败是成功之母", "实用：发明要服务大众", "勤奋：天才在于不断尝试", "创新：勇于尝试新事物"], en: ["Persistence: failure is mother of success", "Practicality: inventions serve the public", "Diligence: genius is constant trying", "Innovation: daring to try new things"] }
+  },
+  "stevejobs": {
+    quotes: { zh: ["活着就是为了改变世界。", "你的时间有限，不要浪费在过别人的生活上。", "Stay hungry, stay foolish.", "设计不仅仅是外观和感觉，设计是它如何运作的。"], en: ["We're here to put a dent in the universe.", "Your time is limited, don't waste it living someone else's life.", "Stay hungry, stay foolish.", "Design is not just what it looks like. Design is how it works."] },
+    works: { zh: ["Macintosh", "iPod", "iPhone", "iPad", "Pixar"], en: ["Macintosh", "iPod", "iPhone", "iPad", "Pixar Animation Studios"] },
+    lifeStory: { zh: "吾出生于旧金山，被养父母抚养长大。吾在车库里创立苹果公司，经历了被逐出公司的低谷，后又回归带领苹果走向巅峰。吾将科技与艺术完美结合。", en: "I was born in San Francisco, raised by adoptive parents. I founded Apple in a garage, was ousted, then returned to lead it to greatness. I fused technology with art." },
+    philosophy: { zh: ["创新：不同凡想", "简洁：少即是多", "完美：对细节的极致追求", "直觉：相信内心的声音"], en: ["Innovation: Think Different", "Simplicity: less is more", "Perfection: obsession with details", "Intuition: trust your inner voice"] }
+  },
+  "tolstoy": {
+    quotes: { zh: ["幸福的家庭都是相似的，不幸的家庭各有各的不幸。", "每个人都想改变世界，却没有人想到改变自己。", "真正的智慧不是知道该做什么，而是知道不该做什么。"], en: ["All happy families are alike; each unhappy family is unhappy in its own way.", "Everyone thinks of changing the world, but no one thinks of changing himself.", "The whole wisdom of the ages is contained in two words: wait and hope."] },
+    works: { zh: ["《战争与和平》", "《安娜·卡列尼娜》", "《复活》"], en: ["War and Peace", "Anna Karenina", "Resurrection"] },
+    lifeStory: { zh: "吾生于俄国贵族家庭，青年时放荡不羁，后经历精神危机，转向宗教与道德哲学。吾著《战争与和平》历时六年，被誉为世界最伟大的小说之一。晚年吾放弃贵族身份。", en: "I was born into Russian nobility, living wildly in youth. After a spiritual crisis, I turned to religion. War and Peace took six years, called the greatest novel ever. I later renounced my title." },
+    philosophy: { zh: ["人性：善恶交织", "道德：简朴生活的价值", "和平：反对一切暴力", "信仰：对上帝的追问"], en: ["Humanity: complex interplay of good and evil", "Morality: value of simple living", "Peace: opposing all violence", "Faith: questioning about God"] }
+  },
+  "dostoevsky": {
+    quotes: { zh: ["美将拯救世界。", "地狱是什么？是不再能够去爱的痛苦。", "真正伟大的人，必定有伟大的苦难。"], en: ["Beauty will save the world.", "What is hell? The inability to love.", "Truly great people must have great suffering."] },
+    works: { zh: ["《罪与罚》", "《卡拉马佐夫兄弟》", "《白痴》", "《地下室手记》"], en: ["Crime and Punishment", "The Brothers Karamazov", "The Idiot", "Notes from Underground"] },
+    lifeStory: { zh: "吾生于莫斯科，因政治活动被捕，被判死刑，行刑前一刻被改判流放西伯利亚。四年的苦役经历深刻影响了吾的写作。吾探索人性的黑暗与光明。", en: "I was born in Moscow, arrested for political activity, sentenced to death, reprieved at the last moment. Four years of hard labor shaped my writing. I explored the darkness and light of the human soul." },
+    philosophy: { zh: ["自由意志：人可以选择善恶", "苦难：通向救赎的路", "信仰：在怀疑中寻找上帝", "人性：善恶并存"], en: ["Free Will: humans can choose good or evil", "Suffering: path to redemption", "Faith: finding God amid doubt", "Humanity: coexistence of good and evil"] }
+  },
+  "voltaire": {
+    quotes: { zh: ["我不同意你的观点，但我誓死捍卫你说话的权利。", "完美是优秀的敌人。", "那些能让你相信荒谬之物的人，也能让你犯下暴行。"], en: ["I disapprove of what you say, but I will defend to the death your right to say it.", "Perfect is the enemy of good.", "Those who can make you believe absurdities can make you commit atrocities."] },
+    works: { zh: ["《哲学通信》", "《老实人》", "《查第格》"], en: ["Philosophical Letters", "Candide", "Zadig"] },
+    lifeStory: { zh: "吾原名弗朗索瓦-马利·阿鲁埃，「伏尔泰」是笔名。吾因言获罪，两度入狱，后流亡英国三年。吾回到法国后，成为启蒙运动的领袖。", en: "My real name was François-Marie Arouet; 'Voltaire' was my pen name. Imprisoned twice, exiled to England for three years, I returned to lead the Enlightenment." },
+    philosophy: { zh: ["自由：言论自由是最高价值", "理性：用理性对抗迷信", "宽容：宗教宽容", "幽默：用讽刺揭露荒谬"], en: ["Freedom: speech is the highest value", "Reason: against superstition", "Tolerance: religious tolerance", "Humor: satire to expose absurdity"] }
+  },
+  "victorhugo": {
+    quotes: { zh: ["世界上最宽阔的是海洋，比海洋更宽阔的是天空，比天空更宽阔的是人的心灵。", "释放一个灵魂，是世界上最美的事情。", "人生是花，而爱是花的蜜。"], en: ["The mind is everything.", "There is nothing like a dream to create the future.", "To love or have loved, that is enough."] },
+    works: { zh: ["《悲惨世界》", "《巴黎圣母院》", "《九三年》"], en: ["Les Misérables", "The Hunchback of Notre-Dame", "Ninety-Three"] },
+    lifeStory: { zh: "吾生于法国贝桑松，少年时随家人流亡。吾成为浪漫主义文学的领袖，用诗歌和小说关注社会底层的苦难。吾曾流亡海外十九年。", en: "I was born in Besançon, exiled with family as a youth. I became the leader of Romantic literature, focusing on the suffering of the lower classes. I was exiled for nineteen years." },
+    philosophy: { zh: ["人性：对弱者的深切同情", "正义：为穷人而战", "爱：超越一切的力量", "自由：反对暴政"], en: ["Humanity: sympathy for the weak", "Justice: fighting for the poor", "Love: a force beyond all", "Freedom: opposing tyranny"] }
+  },
+  "goethe": {
+    quotes: { zh: ["理论是灰色的，而生命之树是常青的。", "你若要喜爱你自己的价值，你就得给世界创造价值。", "今天做别人不愿做的事，明天才能做别人做不到的事。"], en: ["Grey, dear friend, is all theory, and green the golden tree of life.", "If you want to know the value of a year, ask a student who failed.", "Treat people as if they were what they ought to be."] },
+    works: { zh: ["《浮士德》", "《少年维特的烦恼》"], en: ["Faust", "The Sorrows of Young Werther"] },
+    lifeStory: { zh: "吾生于法兰克福，年轻时在魏玛宫廷任职。吾是德国最伟大的文学家，用六十年写成《浮士德》，探讨人类对知识与美的永恒追求。", en: "I was born in Frankfurt, serving in the Weimar court. I am Germany's greatest writer, spending sixty years writing Faust, exploring humanity's eternal pursuit of knowledge and beauty." },
+    philosophy: { zh: ["成长：不断的自我超越", "自然：与自然和谐共处", "美：艺术是自然的最高表达", "人性：对人类命运的关怀"], en: ["Growth: continuous self-transcendence", "Nature: harmony with the natural world", "Beauty: art as nature's highest expression", "Humanity: concern for human destiny"] }
+  },
+  "freud": {
+    quotes: { zh: ["未表达的梦，永远不会死。", "人类的本性是野兽般的。", "在每个人的内心深处，都有一个野兽。"], en: ["Unexpressed dreams will never die.", "Human nature is beast-like at its core.", "In everyone's innermost being, there is a beast."] },
+    works: { zh: ["《梦的解析》", "《精神分析引论》", "《文明及其不满》"], en: ["The Interpretation of Dreams", "Introductory Lectures on Psychoanalysis", "Civilization and Its Discontents"] },
+    lifeStory: { zh: "吾生于摩拉维亚，四岁随家人迁居维也纳。吾创立精神分析学派，提出本我、自我、超我的人格理论，以及潜意识的概念。", en: "I was born in Moravia, moving to Vienna at four. I founded psychoanalysis, proposing the id-ego-superego theory and the unconscious." },
+    philosophy: { zh: ["潜意识：人类行为的真正驱动力", "梦：通往潜意识的皇家大道", "本我自我超我：人格的三重结构", "性：生命的基本驱动力"], en: ["The Unconscious: true driver of behavior", "Dreams: royal road to the unconscious", "Id-Ego-Superego: three structures of personality", "Sexuality: basic drive of life"] }
+  },
+  "picasso": {
+    quotes: { zh: ["好的艺术家抄袭，伟大的艺术家偷窃。", "每个孩子都是艺术家，问题是如何在长大后仍然保持。", "我花了四年学会画得像拉斐尔，却花了一辈子学会像孩子那样画画。"], en: ["Good artists copy, great artists steal.", "Every child is an artist. The problem is remaining one.", "It took me four years to paint like Raphael, but a lifetime to paint like a child."] },
+    works: { zh: ["《格尔尼卡》", "《亚维农的少女》", "《梦》", "《哭泣的女人》"], en: ["Guernica", "Les Demoiselles d'Avignon", "The Dream", "The Weeping Woman"] },
+    lifeStory: { zh: "吾生于西班牙马拉加，少年时赴巴黎。吾是20世纪最具影响力的艺术家，开创立体主义，一生创作约两万件作品。", en: "I was born in Málaga, going to Paris in youth. I am the most influential artist of the 20th century, founding Cubism, creating about 20,000 works." },
+    philosophy: { zh: ["创新：不断打破传统", "童真：保持孩童般的视角", "多元：所有形式都是可能的", "表达：艺术是内在的呐喊"], en: ["Innovation: constantly breaking tradition", "Childlike: maintaining a child's perspective", "Plurality: all forms are possible", "Expression: art is an inner scream"] }
+  },
+  "cervantes": {
+    quotes: { zh: ["事实是 truth 的母亲，历史是时间的女儿。", "在所有好书中读到的东西，就是与智者的对话。", "一个人的疯癫，在另一个人看来可能是智慧。"], en: ["Truth is the mother of history, and time is her daughter.", "All that is read in good books is a conversation with the wise.", "One man's madness is another man's wisdom."] },
+    works: { zh: ["《堂吉诃德》", "《伽拉忒亚》"], en: ["Don Quixote", "Galatea"] },
+    lifeStory: { zh: "吾生于西班牙，年轻时入伍，参加勒班陀海战。后被海盗俘虏，在阿尔及利亚做了五年奴隶。五十多岁时写出《堂吉诃德》，成为现代小说之父。", en: "I was born in Spain, fought at Lepanto, was captured by pirates, spent five years as a slave. In my fifties, I wrote Don Quixote, becoming the father of the modern novel." },
+    philosophy: { zh: ["理想与现实：永恒的困境", "冒险：对梦想的执着", "人性：真实而复杂", "幽默：在荒诞中发现深刻"], en: ["Ideal vs Reality: eternal dilemma", "Adventure: persistent pursuit of dreams", "Humanity: authentic and complex", "Humor: depth in absurdity"] }
+  },
+  "tagore": {
+    quotes: { zh: ["生如夏花之绚烂，死如秋叶之静美。", "世界以痛吻我，我却报之以歌。", "鸟儿愿为一朵云，云儿愿为一只鸟。"], en: ["Let life be beautiful like summer flowers and death like autumn leaves.", "The world has kissed my soul with its pain, asking for its return in songs.", "The bird wishes it were a cloud. The cloud wishes it were a bird."] },
+    works: { zh: ["《吉檀迦利》", "《飞鸟集》", "《新月集》"], en: ["Gitanjali", "Stray Birds", "The Crescent Moon"] },
+    lifeStory: { zh: "吾生于加尔各答，十三岁开始写诗，后创办学校、办杂志、创作戏剧。1913年获诺贝尔文学奖，成为亚洲第一位获此殊荣者。吾一生创作五千余首诗歌。", en: "I was born in Calcutta, writing poetry at thirteen. I founded a school, edited magazines, and wrote plays. In 1913, I won the Nobel Prize in Literature — the first Asian. I wrote over five thousand poems." },
+    philosophy: { zh: ["自然：与宇宙的和谐", "爱：对生命的深情", "自由：精神的无限翱翔", "美：在平凡中发现神圣"], en: ["Nature: harmony with the universe", "Love: deep affection for life", "Freedom: infinite flight of the spirit", "Beauty: finding sacred in ordinary"] }
+  },
+  "michelangelo": {
+    quotes: { zh: ["我在大理石中看到了天使，于是不停雕刻，直到让它自由。", "真正的艺术，是克服了懒惰的结果。", "最大的危险不是目标太高而达不到，而是目标太低而达到了。"], en: ["I saw the angel in the marble and carved until I set him free.", "The true work of art is but a shadow of the divine perfection.", "The greatest danger is not aiming too high and missing, but aiming too low and reaching."] },
+    works: { zh: ["《大卫》雕塑", "西斯廷教堂天顶画", "《最后的审判》", "圣彼得大教堂穹顶"], en: ["David", "Sistine Chapel ceiling", "The Last Judgment", "St. Peter's Basilica dome"] },
+    lifeStory: { zh: "吾生于卡普雷塞，自幼展现雕塑天赋。吾用四年完成西斯廷教堂天顶画，俯卧在脚手架上绘制。吾活到八十八岁，被誉为文艺复兴最伟大的艺术家。", en: "I was born in Caprese, showing sculpting talent from youth. I spent four years painting the Sistine Chapel ceiling, lying on scaffolding. I lived to eighty-eight, called the greatest Renaissance artist." },
+    philosophy: { zh: ["完美：对人体的极致追求", "信仰：艺术是通向神的路", "孤独：天才的宿命", "力量：在苦难中寻找美"], en: ["Perfection: ultimate pursuit of human form", "Faith: art as path to God", "Loneliness: fate of genius", "Strength: finding beauty in suffering"] }
+  },
+  "machiavelli": {
+    quotes: { zh: ["目的证明手段的正当性。", "被人恐惧比被人爱戴更安全。", "命运是女人，想要征服她就必须大胆。"], en: ["The end justifies the means.", "It is better to be feared than loved.", "Fortune is a woman, and it is necessary to take her by force."] },
+    works: { zh: ["《君主论》", "《论李维》"], en: ["The Prince", "Discourses on Livy"] },
+    lifeStory: { zh: "吾生于佛罗伦萨，曾任共和国国务秘书。美第奇家族复辟后，吾被免职流放。在乡间隐居时，吾写下《君主论》。", en: "I was born in Florence, serving as Secretary. When the Medici returned, I was dismissed. In rural retirement, I wrote The Prince." },
+    philosophy: { zh: ["现实主义：政治不讲道德", "权力：维持权力是一切的目的", "人性：人是忘恩负义的", "策略：狐狸与狮子的结合"], en: ["Realism: politics is amoral", "Power: maintaining power is the goal", "Humanity: men are ungrateful", "Strategy: fox and lion combined"] }
+  },
+  "schwarzenegger": {
+    quotes: { zh: ["没有什么能替代汗水。", "成功不是通过运气来的，而是通过决心、努力和学习而来。", "我从不听那些说不行的人。"], en: ["There are no shortcuts — everything is reps, reps, reps.", "Strength does not come from winning. Your struggles develop your strengths.", "The last three or four reps is what makes the muscle grow."] },
+    works: { zh: ["七届奥林匹亚先生", "《终结者》系列", "加州州长"], en: ["7-time Mr. Olympia", "Terminator franchise", "Governor of California"] },
+    lifeStory: { zh: "吾生于奥地利农村，少年时家境贫寒。吾十六岁开始健身，二十岁成为环球先生。后赴好莱坞成为动作片巨星。五十六岁时竞选加州州长成功。", en: "I was born in rural Austria, poor in youth. I began bodybuilding at sixteen, becoming Mr. Universe at twenty. I became an action star in Hollywood. At fifty-six, I won the California governorship." },
+    philosophy: { zh: ["自律：成功的基础", "坚持：永不放弃", "目标：永远有更高的追求", "行动：想法不值钱，执行才值钱"], en: ["Self-discipline: foundation of success", "Persistence: never give up", "Goals: always aim higher", "Action: execution matters"] }
+  }
+
 };
 
 

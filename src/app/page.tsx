@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { celebrities } from "@/data/celebrities";
@@ -20,9 +20,11 @@ import { useLanguage } from "@/context/LanguageContext";
 import { countInterestMatches } from "@/lib/interest-map";
 import { getMbtiRecommendations, mbtiCompatibility, getCelebrityMbti } from "@/lib/mbti-match";
 import { translateCategory, translateEra, translateInterest } from "@/lib/i18n";
-import Onboarding from "@/components/Onboarding";
-import MBTIPanel, { MbtiBadge } from "@/components/MBTIPanel";
 import { Language } from "@/types";
+
+const Onboarding = lazy(() => import("@/components/Onboarding"));
+const MBTIPanel = lazy(() => import("@/components/MBTIPanel").then(m => ({ default: m.default })));
+const MbtiBadge = lazy(() => import("@/components/MBTIPanel").then(m => ({ default: m.MbtiBadge })));
 
 export default function HomePage() {
   const { language, setLanguage, userProfile, updateUserProfile, t, languageLabel } =
@@ -78,7 +80,11 @@ export default function HomePage() {
   }, [userProfile?.interests, language]);
 
   if (showOnboarding) {
-    return <Onboarding onComplete={() => setShowOnboarding(false)} />;
+    return (
+      <Suspense fallback={null}>
+        <Onboarding onComplete={() => setShowOnboarding(false)} />
+      </Suspense>
+    );
   }
 
   return (
@@ -163,6 +169,7 @@ export default function HomePage() {
                     key={c.id}
                     whileHover={{ scale: 1.2, zIndex: 10 }}
                     src={c.avatar}
+                    loading="lazy"
                     className="w-12 h-12 rounded-2xl border-2 border-black bg-zinc-900"
                     alt={c.name[language]}
                   />
@@ -175,7 +182,11 @@ export default function HomePage() {
                     ? t("welcome_user", { name: userProfile.name })
                     : t("find_mentor")}
                 </p>
-                {userProfile?.mbti && <MbtiBadge type={userProfile.mbti} />}
+                {userProfile?.mbti && (
+                  <Suspense fallback={null}>
+                    <MbtiBadge type={userProfile.mbti} />
+                  </Suspense>
+                )}
                 <p className="text-[10px] text-white/30 uppercase tracking-widest">
                   {userProfile?.interests.length
                     ? t("based_on_interests", { interests: interestLabels })
@@ -231,11 +242,12 @@ export default function HomePage() {
                       <Link key={celebrity.id} href={`/chat/${celebrity.id}`}>
                         <div className="group p-5 rounded-2xl border border-white/10 bg-black/40 hover:border-primary/40 transition-all h-full">
                           <div className="flex items-center gap-3 mb-4">
-                            <img
-                              src={celebrity.avatar}
-                              alt={celebrity.name[language]}
-                              className="w-12 h-12 rounded-xl border border-white/10"
-                            />
+                          <img
+                            src={celebrity.avatar}
+                            loading="lazy"
+                            alt={celebrity.name[language]}
+                            className="w-12 h-12 rounded-xl border border-white/10"
+                          />
                             <div>
                               <h3 className="font-bold">{celebrity.name[language]}</h3>
                               <p className="text-[10px] text-primary/70">
@@ -334,6 +346,7 @@ export default function HomePage() {
                         <div className="w-20 h-20 rounded-3xl bg-zinc-900 border border-white/10 p-1 group-hover:border-primary/50 transition-all overflow-hidden relative z-10">
                           <img
                             src={celebrity.avatar}
+                            loading="lazy"
                             alt={celebrity.name[language]}
                             className="w-full h-full object-cover rounded-2xl"
                           />
@@ -428,13 +441,15 @@ export default function HomePage() {
                 <X className="w-4 h-4" />
               </button>
               <h3 className="text-xl font-bold mb-6 pr-10">{t("mbti_step_title")}</h3>
-              <MBTIPanel
-                onComplete={(type) => {
-                  updateUserProfile({ mbti: type });
-                  setShowMbtiModal(false);
-                }}
-                showSkip={false}
-              />
+              <Suspense fallback={null}>
+                <MBTIPanel
+                  onComplete={(type) => {
+                    updateUserProfile({ mbti: type });
+                    setShowMbtiModal(false);
+                  }}
+                  showSkip={false}
+                />
+              </Suspense>
             </motion.div>
           </motion.div>
         )}

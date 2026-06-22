@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { celebrities } from "@/data/celebrities";
@@ -21,6 +21,30 @@ import { useLanguage } from "@/context/LanguageContext";
 import { chatWithCelebrity, getInitialGreeting } from "@/services/ai";
 import { translateCategory, translateEra } from "@/lib/i18n";
 
+const MAX_CHAT_HISTORY_BYTES = 500_000;
+
+function generateId(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function saveChatHistory(key: string, messages: Message[]): boolean {
+  try {
+    const json = JSON.stringify(messages);
+    if (new TextEncoder().encode(json).length > MAX_CHAT_HISTORY_BYTES) {
+      const trimmed = messages.slice(Math.floor(messages.length / 2));
+      localStorage.setItem(key, JSON.stringify(trimmed));
+    } else {
+      localStorage.setItem(key, json);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default function ChatPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -31,68 +55,64 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const greetingFetchId = useRef(0);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // 加载数据和历史记录
   useEffect(() => {
     if (!isClient) return;
     
     const found = celebrities.find(c => c.id === id);
-    if (found) {
-      setCelebrity(found);
-      
-      // 尝试从本地存储恢复对话记录（使用不依赖语言的 key，避免切换语言丢失记录）
-      try {
-        const savedMessages = localStorage.getItem(`chat_history_${id}`);
-        if (savedMessages) {
-          setMessages(JSON.parse(savedMessages));
-        } else {
-          // 如果没有历史记录，则获取初始欢迎语
-            const fetchGreeting = async () => {
-              setIsLoading(true);
-              try {
-                const greetingText = await getInitialGreeting(found, language);
-                if (greetingText) {
-                  const greeting: Message = {
-                    id: "1",
-                    role: "assistant",
-                    content: greetingText,
-                    timestamp: Date.now(),
-                  };
-                  setMessages([greeting]);
-                } else {
-                  setMessages([]);
-                }
-              } catch (error) {
-                console.error("Failed to fetch greeting:", error);
-                setMessages([]);
-              } finally {
-                setIsLoading(false);
-              }
-            };
-          fetchGreeting();
-        }
-      } catch (error) {
-        console.error("Failed to load chat history:", error);
-        setMessages([]);
-      }
-    } else {
+    if (!found) {
       router.push("/");
+      return;
     }
-  }, [id, router, isClient]);
 
-  // 持久化消息记录
+    setCelebrity(found);
+
+    const savedMessages = localStorage.getItem(`chat_history_${id}`);
+    if (savedMessages) {
+      try {
+        const parsed = JSON.parse(savedMessages);
+        if (Array.isArray(parsed)) {
+          setMessages(parsed);
+          return;
+        }
+      } catch {
+        // fall through to fetch greeting
+      }
+    }
+
+    const fetchId = ++greetingFetchId.current;
+    setIsLoading(true);
+    getInitialGreeting(found, language)
+      .then((greetingText) => {
+        if (fetchId !== greetingFetchId.current) return;
+        if (greetingText) {
+          setMessages([{
+            id: generateId(),
+            role: "assistant",
+            content: greetingText,
+            timestamp: Date.now(),
+          }]);
+        }
+      })
+      .catch(() => {
+        if (fetchId !== greetingFetchId.current) return;
+      })
+      .finally(() => {
+        if (fetchId === greetingFetchId.current) {
+          setIsLoading(false);
+        }
+      });
+  }, [id, router, isClient, language]);
+
   useEffect(() => {
     if (!isClient || !celebrity || messages.length === 0) return;
-    
-    try {
-      localStorage.setItem(`chat_history_${celebrity.id}`, JSON.stringify(messages));
-    } catch (error) {
-      console.error("Failed to save chat history:", error);
-    }
+    saveChatHistory(`chat_history_${celebrity.id}`, messages);
   }, [messages, celebrity, isClient]);
 
   useEffect(() => {
@@ -101,38 +121,48 @@ export default function ChatPage() {
     }
   }, [messages, isLoading]);
 
-  const handleClearChat = () => {
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+  }, [input]);
+
+  const handleClearChat = useCallback(() => {
     if (!celebrity) return;
     localStorage.removeItem(`chat_history_${celebrity.id}`);
     setMessages([]);
     setInput("");
-    void (async () => {
-      setIsLoading(true);
-      try {
-        const greetingText = await getInitialGreeting(celebrity, language);
-        if (greetingText) {
-          setMessages([
-            {
-              id: "1",
-              role: "assistant",
-              content: greetingText,
-              timestamp: Date.now(),
-            },
-          ]);
-        } else {
-          setMessages([]);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  };
 
-  const handleSend = async () => {
+    const fetchId = ++greetingFetchId.current;
+    setIsLoading(true);
+    getInitialGreeting(celebrity, language)
+      .then((greetingText) => {
+        if (fetchId !== greetingFetchId.current) return;
+        if (greetingText) {
+          setMessages([{
+            id: generateId(),
+            role: "assistant",
+            content: greetingText,
+            timestamp: Date.now(),
+          }]);
+        }
+      })
+      .catch(() => {
+        if (fetchId !== greetingFetchId.current) return;
+      })
+      .finally(() => {
+        if (fetchId === greetingFetchId.current) {
+          setIsLoading(false);
+        }
+      });
+  }, [celebrity, language]);
+
+  const handleSend = useCallback(async () => {
     if (!input.trim() || !celebrity || isLoading) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: generateId(),
       role: "user",
       content: input,
       timestamp: Date.now(),
@@ -146,7 +176,7 @@ export default function ChatPage() {
       const response = await chatWithCelebrity(celebrity, [...messages, userMessage], language);
       
       const assistantMessage: Message = {
-        id: `assistant_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        id: generateId(),
         role: "assistant",
         content: response || "",
         timestamp: Date.now(),
@@ -156,7 +186,6 @@ export default function ChatPage() {
     } catch (error) {
       console.error(error);
       
-      // 检查错误是否是速率限制
       const errorMessage = error instanceof Error ? error.message : String(error);
       let userFriendlyMessage = t("error_ai_failed");
       
@@ -164,18 +193,16 @@ export default function ChatPage() {
         userFriendlyMessage = t("error_rate_limit");
       }
       
-      const errorMessageObj: Message = {
-        id: `error_${Date.now()}`,
+      setMessages(prev => [...prev, {
+        id: generateId(),
         role: "assistant",
         content: userFriendlyMessage,
         timestamp: Date.now(),
-      };
-
-      setMessages(prev => [...prev, errorMessageObj]);
+      }]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [input, celebrity, isLoading, messages, language, t]);
 
   if (!celebrity) return null;
 
@@ -366,8 +393,9 @@ export default function ChatPage() {
         <div className="p-8 bg-gradient-to-t from-black via-black/90 to-transparent relative z-40">
           <div className="max-w-4xl mx-auto relative group">
             <div className="absolute -inset-1 bg-gold-gradient opacity-10 blur-2xl group-focus-within:opacity-20 transition-opacity rounded-[32px] pointer-events-none" />
-            <div className="relative flex items-center gap-4 bg-[#121212] border border-white/10 rounded-[28px] p-3 pl-6 shadow-2xl focus-within:border-primary/30 transition-all">
+            <div className="relative flex items-end gap-4 bg-[#121212] border border-white/10 rounded-[28px] p-3 pl-6 shadow-2xl focus-within:border-primary/30 transition-all">
               <textarea
+                ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -377,14 +405,14 @@ export default function ChatPage() {
                   }
                 }}
                 placeholder={`${t('input_placeholder')}`}
-                className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-white/80 placeholder:text-white/20 resize-none h-14 flex items-center py-4 font-medium"
+                className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-white/80 placeholder:text-white/20 resize-none max-h-40 py-3 font-medium leading-relaxed"
                 rows={1}
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || isLoading}
                 className={cn(
-                  "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-105",
+                  "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-105 flex-shrink-0",
                   input.trim() && !isLoading 
                     ? "bg-gold-gradient text-black shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)]" 
                     : "bg-white/5 text-white/10"

@@ -5,6 +5,18 @@ import { Language, UserProfile } from "@/types";
 import { translations, formatTranslation } from "@/lib/translations";
 import { LANGUAGE_LABELS } from "@/lib/i18n";
 
+const VALID_LANGUAGES: Language[] = ["zh", "en", "ja", "vi", "my"];
+
+function isValidUserProfile(data: unknown): data is UserProfile {
+  if (!data || typeof data !== "object") return false;
+  const obj = data as Record<string, unknown>;
+  if (typeof obj.name !== "string") return false;
+  if (!Array.isArray(obj.interests)) return false;
+  if (!VALID_LANGUAGES.includes(obj.language as Language)) return false;
+  if (obj.mbti !== undefined && typeof obj.mbti !== "string") return false;
+  return true;
+}
+
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
@@ -32,9 +44,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     try {
       const savedProfile = localStorage.getItem("user_profile");
       if (savedProfile) {
-        const profile = JSON.parse(savedProfile) as UserProfile;
-        setUserProfileState(profile);
-        setLanguageState(profile.language);
+        const parsed = JSON.parse(savedProfile);
+        if (isValidUserProfile(parsed)) {
+          setUserProfileState(parsed);
+          setLanguageState(parsed.language);
+        }
       }
     } catch (error) {
       console.error("Failed to load user profile from localStorage:", error);

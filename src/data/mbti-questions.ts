@@ -23,7 +23,7 @@ export const MBTI_QUESTIONS: MbtiQuestion[] = [
     },
     options: [
       { label: { zh: "精力充沛，想继续交流", en: "Energized, want more interaction", ja: "元気になり、もっと交流したい", vi: "Tràn đầy năng lượng", my: "စွမ်းအားပြည့်ဝသည်" }, value: "E" },
-      { label: { zh: "有些疲惫，需要独处恢复", en: "Tired, need alone time", ja: "疲れて、一人の時間が必要", vi: "Mệt mỏi, cần ở một mình", my: "疲れて、 တစ်ယောက်တည်း လိုသည်" }, value: "I" },
+      { label: { zh: "有些疲惫，需要独处恢复", en: "Tired, need alone time", ja: "疲れて、一人の時間が必要", vi: "Mệt mỏi, cần ở một mình", my: "ပင်ပန်းပြီး တစ်ယောက်တည်း လိုသည်" }, value: "I" },
     ],
   },
   {

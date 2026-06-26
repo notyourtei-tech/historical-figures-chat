@@ -3,6 +3,7 @@ import { runChat } from "@/lib/ancient-chat";
 import { rateLimit, getClientIp, sanitizeInput } from "@/lib/rate-limit";
 import { ChatRequestSchema } from "@/lib/validation";
 import { logSecurityEvent } from "@/lib/security-logger";
+import { ErrorCode } from "@/lib/errors";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -10,13 +11,29 @@ export const maxDuration = 60;
 function isAllowedOrigin(req: NextRequest): boolean {
   const origin = req.headers.get("origin");
   const host = req.headers.get("host");
-  if (!origin || !host) return true;
-  try {
-    const originHost = new URL(origin).host;
-    return originHost === host;
-  } catch {
-    return false;
+
+  if (origin && host) {
+    try {
+      const originHost = new URL(origin).host;
+      return originHost === host;
+    } catch {
+      return false;
+    }
   }
+
+  if (!origin && host) {
+    const referer = req.headers.get("referer");
+    if (referer) {
+      try {
+        const refererHost = new URL(referer).host;
+        return refererHost === host;
+      } catch {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 export async function POST(req: NextRequest) {
@@ -26,7 +43,7 @@ export async function POST(req: NextRequest) {
     if (!isAllowedOrigin(req)) {
       logSecurityEvent({ type: "INVALID_ORIGIN", ip, path: "/api/chat", detail: req.headers.get("origin") || "none" });
       return NextResponse.json(
-        { success: false, error: "INVALID_ORIGIN" },
+        { success: false, error: ErrorCode.INVALID_ORIGIN },
         { status: 403 }
       );
     }
@@ -35,7 +52,7 @@ export async function POST(req: NextRequest) {
     if (!allowed) {
       logSecurityEvent({ type: "RATE_LIMIT", ip, path: "/api/chat" });
       return NextResponse.json(
-        { success: false, error: "RATE_LIMIT_EXCEEDED" },
+        { success: false, error: ErrorCode.RATE_LIMIT },
         { status: 429, headers: { "Retry-After": "60" } }
       );
     }
@@ -46,7 +63,7 @@ export async function POST(req: NextRequest) {
     } catch {
       logSecurityEvent({ type: "INVALID_INPUT", ip, path: "/api/chat", detail: "Invalid JSON" });
       return NextResponse.json(
-        { success: false, error: "INVALID_REQUEST" },
+        { success: false, error: ErrorCode.INVALID_REQUEST },
         { status: 400 }
       );
     }
@@ -55,7 +72,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       logSecurityEvent({ type: "INVALID_INPUT", ip, path: "/api/chat", detail: parsed.error.issues.map(i => i.message).join("; ") });
       return NextResponse.json(
-        { success: false, error: "INVALID_REQUEST" },
+        { success: false, error: ErrorCode.INVALID_REQUEST },
         { status: 400 }
       );
     }
@@ -76,7 +93,7 @@ export async function POST(req: NextRequest) {
     console.error("[API /chat]", detail);
     logSecurityEvent({ type: "SUSPICIOUS_ACTIVITY", ip, path: "/api/chat", detail: detail.slice(0, 200) });
     return NextResponse.json(
-      { success: false, error: "SERVER_ERROR", content: "Internal server error" },
+      { success: false, error: ErrorCode.SERVER_ERROR, content: "Internal server error" },
       { status: 500 }
     );
   }

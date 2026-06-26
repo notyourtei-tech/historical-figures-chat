@@ -32,7 +32,6 @@ export default function MBTIPanel({
   const handleAnswer = (value: MbtiDimension) => {
     const next = [...answers, value];
     setAnswers(next);
-
     if (questionIndex + 1 >= MBTI_QUESTIONS.length) {
       onComplete(calculateMbti(next));
       return;
@@ -44,17 +43,17 @@ export default function MBTIPanel({
 
   if (mode === "choose") {
     return (
-      <div className={cn("space-y-4", compact ? "" : "space-y-6")}>
+      <div className={cn("space-y-3", compact ? "" : "space-y-4")}>
         <button
           onClick={() => setMode("test")}
-          className="w-full flex items-center gap-4 p-5 rounded-2xl border border-white/10 bg-white/5 hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
+          className="touch-target w-full flex items-center gap-4 p-4 rounded-xl border border-border bg-white hover:border-vermilion/30 transition-all text-left"
         >
-          <div className="w-12 h-12 rounded-xl bg-gold-gradient flex items-center justify-center flex-shrink-0">
-            <Brain className="w-6 h-6 text-black" />
+          <div className="w-11 h-11 rounded-lg bg-vermilion flex items-center justify-center flex-shrink-0">
+            <Brain className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="font-bold text-white/90">{t("mbti_take_test")}</p>
-            <p className="text-xs text-white/40 mt-1">
+            <p className="font-bold text-ink-500 text-sm">{t("mbti_take_test")}</p>
+            <p className="text-[11px] text-ink-300 mt-0.5">
               {t("mbti_test_progress", { current: 1, total: MBTI_QUESTIONS.length })}
             </p>
           </div>
@@ -62,21 +61,21 @@ export default function MBTIPanel({
 
         <button
           onClick={() => setMode("manual")}
-          className="w-full flex items-center gap-4 p-5 rounded-2xl border border-white/10 bg-white/5 hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
+          className="touch-target w-full flex items-center gap-4 p-4 rounded-xl border border-border bg-white hover:border-vermilion/30 transition-all text-left"
         >
-          <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
-            <Grid3X3 className="w-6 h-6 text-primary" />
+          <div className="w-11 h-11 rounded-lg bg-ink-100 flex items-center justify-center flex-shrink-0">
+            <Grid3X3 className="w-5 h-5 text-vermilion" />
           </div>
           <div>
-            <p className="font-bold text-white/90">{t("mbti_enter_type")}</p>
-            <p className="text-xs text-white/40 mt-1">INTJ · INFP · ENTP ...</p>
+            <p className="font-bold text-ink-500 text-sm">{t("mbti_enter_type")}</p>
+            <p className="text-[11px] text-ink-300 mt-0.5">INTJ · INFP · ENTP ...</p>
           </div>
         </button>
 
         {showSkip && onSkip && (
           <button
             onClick={onSkip}
-            className="w-full py-3 text-sm text-white/30 hover:text-white/60 transition-colors"
+            className="touch-target w-full py-2.5 text-sm text-ink-300 hover:text-ink-400 transition-colors"
           >
             {t("skip")}
           </button>
@@ -87,15 +86,15 @@ export default function MBTIPanel({
 
   if (mode === "manual") {
     return (
-      <div className="space-y-6">
+      <div className="space-y-5">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMode("choose")}
-            className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10"
+            className="touch-target w-10 h-10 md:w-8 md:h-8 rounded-lg bg-ink-100 flex items-center justify-center hover:bg-ink-200 transition-colors"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-4 h-4 text-ink-400" />
           </button>
-          <h3 className="font-bold text-lg">{t("mbti_manual_title")}</h3>
+          <h3 className="font-bold text-base text-ink-500">{t("mbti_manual_title")}</h3>
         </div>
 
         <div className="grid grid-cols-4 gap-2">
@@ -104,10 +103,10 @@ export default function MBTIPanel({
               key={type}
               onClick={() => setSelectedType(type)}
               className={cn(
-                "py-3 rounded-xl text-xs font-bold border transition-all",
+                "touch-target py-2.5 rounded-lg text-xs font-bold border transition-all",
                 selectedType === type
-                  ? "bg-primary/20 border-primary text-primary"
-                  : "bg-white/5 border-white/10 text-white/50 hover:border-white/30"
+                  ? "bg-vermilion/10 border-vermilion text-vermilion"
+                  : "bg-white border-border text-ink-500 hover:border-ink-300"
               )}
             >
               {type}
@@ -118,7 +117,10 @@ export default function MBTIPanel({
         <button
           onClick={() => selectedType && onComplete(selectedType)}
           disabled={!selectedType}
-          className="w-full py-4 rounded-2xl bg-gold-gradient text-black font-bold disabled:opacity-40"
+          className={cn(
+            "touch-target w-full py-3 rounded-xl bg-vermilion text-white font-bold text-sm transition-all",
+            !selectedType && "opacity-40 cursor-not-allowed"
+          )}
         >
           {t("mbti_confirm")}
         </button>
@@ -127,7 +129,7 @@ export default function MBTIPanel({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
         <button
           onClick={() => {
@@ -139,11 +141,11 @@ export default function MBTIPanel({
               setAnswers(answers.slice(0, -1));
             }
           }}
-          className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10"
+          className="touch-target w-10 h-10 md:w-8 md:h-8 rounded-lg bg-ink-100 flex items-center justify-center hover:bg-ink-200 transition-colors"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-4 h-4 text-ink-400" />
         </button>
-        <span className="text-xs font-bold text-white/30 uppercase tracking-widest">
+        <span className="text-[11px] font-bold text-ink-300 uppercase tracking-wider">
           {t("mbti_test_progress", {
             current: questionIndex + 1,
             total: MBTI_QUESTIONS.length,
@@ -151,9 +153,9 @@ export default function MBTIPanel({
         </span>
       </div>
 
-      <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+      <div className="h-1 bg-ink-100 rounded-full overflow-hidden">
         <motion.div
-          className="h-full bg-gold-gradient"
+          className="h-full bg-vermilion"
           animate={{ width: `${((questionIndex + 1) / MBTI_QUESTIONS.length) * 100}%` }}
         />
       </div>
@@ -164,18 +166,18 @@ export default function MBTIPanel({
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
-          className="space-y-6"
+          className="space-y-4"
         >
-          <h3 className="text-lg font-bold leading-relaxed text-white/90">
+          <h3 className="text-base font-bold leading-relaxed text-ink-500">
             {currentQuestion.question[language]}
           </h3>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {currentQuestion.options.map((opt, i) => (
               <button
                 key={i}
                 onClick={() => handleAnswer(opt.value)}
-                className="w-full p-4 rounded-2xl border border-white/10 bg-white/5 hover:border-primary/40 hover:bg-primary/5 text-left text-sm font-medium text-white/80 transition-all"
+                className="touch-target w-full p-3.5 rounded-xl border border-border bg-white hover:border-vermilion/30 hover:bg-vermilion-light text-left text-sm font-medium text-ink-500 transition-all"
               >
                 {opt.label[language]}
               </button>
@@ -190,9 +192,9 @@ export default function MBTIPanel({
 export function MbtiBadge({ type }: { type: string }) {
   const { t } = useLanguage();
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-      <Sparkles className="w-3 h-3 text-primary" />
-      <span className="text-[10px] font-black text-primary uppercase tracking-widest">
+    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-vermilion/8 border border-vermilion/20">
+      <Sparkles className="w-3 h-3 text-vermilion" />
+      <span className="text-[10px] font-bold text-vermilion uppercase tracking-wider">
         {t("mbti_your_type")}: {type}
       </span>
     </div>

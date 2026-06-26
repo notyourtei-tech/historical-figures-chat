@@ -5,21 +5,24 @@ import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { celebrities } from "@/data/celebrities";
 import { Message, Celebrity, Language } from "@/types";
-import { 
-  Send, 
-  ArrowLeft, 
-  MoreVertical, 
-  Sparkles, 
-  User, 
-  Clock, 
-  BookOpen,
-  Info,
-  History
+import {
+  Send,
+  ArrowLeft,
+  MoreHorizontal,
+  Copy,
+  Check,
+  ThumbsUp,
+  ThumbsDown,
+  Download,
+  Trash2,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import { chatWithCelebrity, getInitialGreeting } from "@/services/ai";
 import { translateCategory, translateEra } from "@/lib/i18n";
+import { ErrorCode } from "@/lib/errors";
+import ChatHistorySidebar, { updateConversationMeta } from "@/components/ChatHistorySidebar";
 
 const MAX_CHAT_HISTORY_BYTES = 500_000;
 
@@ -45,6 +48,42 @@ function saveChatHistory(key: string, messages: Message[]): boolean {
   }
 }
 
+function typewriterEffect(el: HTMLElement, text: string, speed: number = 28) {
+  // Cancel any existing typewriter on this element
+  const elWithCleanup = el as unknown as { _typewriterCleanup?: () => void };
+  if (typeof elWithCleanup._typewriterCleanup === "function") {
+    elWithCleanup._typewriterCleanup();
+  }
+
+  let i = 0;
+  let cancelled = false;
+  el.textContent = "";
+  const cursor = document.createElement("span");
+  cursor.className = "typewriter-cursor";
+  el.appendChild(cursor);
+
+  const timer = setInterval(() => {
+    if (cancelled) return;
+    if (i < text.length) {
+      cursor.before(text[i]);
+      i++;
+    } else {
+      clearInterval(timer);
+      setTimeout(() => { if (!cancelled) cursor.remove(); }, 500);
+    }
+  }, speed);
+
+  const cleanup = () => {
+    cancelled = true;
+    clearInterval(timer);
+    cursor.remove();
+    el.textContent = text;
+  };
+
+  elWithCleanup._typewriterCleanup = cleanup;
+  return cleanup;
+}
+
 export default function ChatPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -54,9 +93,16 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [feedbackMap, setFeedbackMap] = useState<Record<string, "like" | "dislike">>({});
+  const [longWait, setLongWait] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const greetingFetchId = useRef(0);
+  const chatAreaRef = useRef<HTMLDivElement>(null);
+  const renderedMessages = useRef<Set<string>>(new Set());
+  const typewritingMessages = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     setIsClient(true);
@@ -64,14 +110,19 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!isClient) return;
-    
-    const found = celebrities.find(c => c.id === id);
+
+    const found = celebrities.find((c) => c.id === id);
     if (!found) {
       router.push("/");
       return;
     }
 
     setCelebrity(found);
+
+    const savedLang = localStorage.getItem(`chat_lang_${id}`);
+    if (savedLang && savedLang !== language) {
+      localStorage.setItem(`chat_lang_${id}`, language);
+    }
 
     const savedMessages = localStorage.getItem(`chat_history_${id}`);
     if (savedMessages) {
@@ -82,7 +133,7 @@ export default function ChatPage() {
           return;
         }
       } catch {
-        // fall through to fetch greeting
+        // fall through
       }
     }
 
@@ -92,28 +143,28 @@ export default function ChatPage() {
       .then((greetingText) => {
         if (fetchId !== greetingFetchId.current) return;
         if (greetingText) {
-          setMessages([{
-            id: generateId(),
-            role: "assistant",
-            content: greetingText,
-            timestamp: Date.now(),
-          }]);
+          setMessages([
+            {
+              id: generateId(),
+              role: "assistant",
+              content: greetingText,
+              timestamp: Date.now(),
+            },
+          ]);
         }
       })
-      .catch(() => {
-        if (fetchId !== greetingFetchId.current) return;
-      })
+      .catch(() => {})
       .finally(() => {
-        if (fetchId === greetingFetchId.current) {
-          setIsLoading(false);
-        }
+        if (fetchId === greetingFetchId.current) setIsLoading(false);
       });
   }, [id, router, isClient, language]);
 
   useEffect(() => {
     if (!isClient || !celebrity || messages.length === 0) return;
     saveChatHistory(`chat_history_${celebrity.id}`, messages);
-  }, [messages, celebrity, isClient]);
+    localStorage.setItem(`chat_lang_${celebrity.id}`, language);
+    updateConversationMeta(celebrity.id, messages);
+  }, [messages, celebrity, isClient, language]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -125,12 +176,105 @@ export default function ChatPage() {
     const ta = textareaRef.current;
     if (!ta) return;
     ta.style.height = "auto";
-    ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+    ta.style.height = `${Math.min(ta.scrollHeight, 120)}px`;
   }, [input]);
+
+  useEffect(() => {
+    const updateViewportHeight = () => {
+      const vh = window.visualViewport?.height || window.innerHeight;
+      document.documentElement.style.setProperty("--vh", `${vh}px`);
+      const chatBox = chatAreaRef.current;
+      if (chatBox) {
+        const topBar = 64;
+        const inputBar = 80;
+        chatBox.style.height = `${vh - topBar - inputBar}px`;
+      }
+    };
+    window.visualViewport?.addEventListener("resize", updateViewportHeight);
+    updateViewportHeight();
+    return () => window.visualViewport?.removeEventListener("resize", updateViewportHeight);
+  }, []);
+
+  // Show long-wait warning after 15 seconds of loading
+  useEffect(() => {
+    if (!isLoading) {
+      setLongWait(false);
+      return;
+    }
+    const timer = setTimeout(() => setLongWait(true), 15000);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
+  // Typewriter for new AI messages
+  const cleanupTypewriterRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    const lastMsg = messages[messages.length - 1];
+    if (!lastMsg || lastMsg.role !== "assistant" || renderedMessages.current.has(lastMsg.id)) return;
+    renderedMessages.current.add(lastMsg.id);
+    typewritingMessages.current.add(lastMsg.id);
+
+    let attempts = 0;
+    const maxAttempts = 5;
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout>;
+
+    const tryTypewrite = () => {
+      if (cancelled) return;
+      const msgEls = document.querySelectorAll("[data-msg-id]");
+      const lastEl = msgEls[msgEls.length - 1];
+      if (!lastEl || lastEl.getAttribute("data-msg-id") !== lastMsg.id) {
+        if (attempts < maxAttempts) {
+          attempts++;
+          retryTimer = setTimeout(tryTypewrite, 30 * attempts);
+          return;
+        }
+        typewritingMessages.current.delete(lastMsg.id);
+        return;
+      }
+      const contentEl = lastEl.querySelector(".msg-content") as HTMLElement;
+      if (!contentEl) {
+        if (attempts < maxAttempts) {
+          attempts++;
+          retryTimer = setTimeout(tryTypewrite, 30 * attempts);
+          return;
+        }
+        typewritingMessages.current.delete(lastMsg.id);
+        return;
+      }
+      const speed = window.innerWidth <= 768 ? 18 : 28;
+      cleanupTypewriterRef.current = typewriterEffect(contentEl, lastMsg.content, speed);
+    };
+
+    requestAnimationFrame(() => { retryTimer = setTimeout(tryTypewrite, 50); });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(retryTimer);
+      typewritingMessages.current.delete(lastMsg.id);
+      if (cleanupTypewriterRef.current) {
+        cleanupTypewriterRef.current();
+        cleanupTypewriterRef.current = null;
+      }
+    };
+  }, [messages]);
+
+  // Cleanup typewriter on unmount
+  useEffect(() => {
+    return () => {
+      if (cleanupTypewriterRef.current) {
+        cleanupTypewriterRef.current();
+      }
+    };
+  }, []);
 
   const handleClearChat = useCallback(() => {
     if (!celebrity) return;
+    if (!window.confirm(t("confirm_clear"))) return;
     localStorage.removeItem(`chat_history_${celebrity.id}`);
+    localStorage.removeItem(`chat_lang_${celebrity.id}`);
+    renderedMessages.current.clear();
+    typewritingMessages.current.clear();
     setMessages([]);
     setInput("");
 
@@ -148,15 +292,11 @@ export default function ChatPage() {
           }]);
         }
       })
-      .catch(() => {
-        if (fetchId !== greetingFetchId.current) return;
-      })
+      .catch(() => {})
       .finally(() => {
-        if (fetchId === greetingFetchId.current) {
-          setIsLoading(false);
-        }
+        if (fetchId === greetingFetchId.current) setIsLoading(false);
       });
-  }, [celebrity, language]);
+  }, [celebrity, t, language]);
 
   const handleSend = useCallback(async () => {
     if (!input.trim() || !celebrity || isLoading) return;
@@ -168,269 +308,312 @@ export default function ChatPage() {
       timestamp: Date.now(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
 
     try {
       const response = await chatWithCelebrity(celebrity, [...messages, userMessage], language);
-      
       const assistantMessage: Message = {
         id: generateId(),
         role: "assistant",
         content: response || "",
         timestamp: Date.now(),
       };
-
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       console.error(error);
-      
       const errorMessage = error instanceof Error ? error.message : String(error);
       let userFriendlyMessage = t("error_ai_failed");
-      
-      if (errorMessage.includes("RATE_LIMIT_EXCEEDED") || errorMessage.includes("速率限制") || errorMessage.includes("rate limit")) {
+      if (errorMessage.includes(ErrorCode.RATE_LIMIT) || errorMessage.includes("rate limit")) {
         userFriendlyMessage = t("error_rate_limit");
       }
-      
-      setMessages(prev => [...prev, {
-        id: generateId(),
-        role: "assistant",
-        content: userFriendlyMessage,
-        timestamp: Date.now(),
-      }]);
+      setMessages((prev) => [
+        ...prev,
+        { id: generateId(), role: "assistant", content: userFriendlyMessage, timestamp: Date.now(), isError: true },
+      ]);
     } finally {
       setIsLoading(false);
     }
   }, [input, celebrity, isLoading, messages, language, t]);
 
+  const handleRetry = useCallback(async (errorMessageId: string) => {
+    if (!celebrity || isLoading) return;
+
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+    if (!lastUserMsg) return;
+
+    setMessages((prev) => prev.filter((m) => m.id !== errorMessageId));
+    setIsLoading(true);
+
+    try {
+      const conversationWithoutError = messages.filter((m) => m.id !== errorMessageId);
+      const response = await chatWithCelebrity(celebrity, [...conversationWithoutError, lastUserMsg], language);
+      const assistantMessage: Message = {
+        id: generateId(),
+        role: "assistant",
+        content: response || "",
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error(error);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      let userFriendlyMessage = t("error_ai_failed");
+      if (errMsg.includes(ErrorCode.RATE_LIMIT) || errMsg.includes("rate limit")) {
+        userFriendlyMessage = t("error_rate_limit");
+      }
+      setMessages((prev) => [
+        ...prev,
+        { id: generateId(), role: "assistant", content: userFriendlyMessage, timestamp: Date.now(), isError: true },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [celebrity, isLoading, messages, language, t]);
+
+  const handleFeedback = useCallback((msgId: string, type: "like" | "dislike") => {
+    setFeedbackMap((prev) => {
+      const next = { ...prev };
+      if (next[msgId] === type) {
+        delete next[msgId];
+      } else {
+        next[msgId] = type;
+      }
+      return next;
+    });
+  }, []);
+
+  const handleCopy = useCallback(async (msgId: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(msgId);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopiedId(msgId);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  }, []);
+
+  const handleExport = useCallback(() => {
+    if (!celebrity || messages.length === 0) return;
+    const lines = messages.map((msg) => {
+      const speaker = msg.role === "user" ? (t("you") || "You") : celebrity.name[language];
+      return `[${speaker}]\n${msg.content}`;
+    });
+    const header = `${celebrity.name[language]} - ${t("chat_export_title") || "Chat History"}\n${"=".repeat(40)}\n`;
+    const text = header + lines.join("\n\n");
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${celebrity.id}-chat.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [celebrity, messages, language, t]);
+
   if (!celebrity) return null;
 
+  const currentCelebrity = celebrity;
+
   return (
-    <div className="flex h-screen bg-[#0A0A0A] overflow-hidden selection:bg-primary/30">
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-20 pointer-events-none" />
-
-      {/* Sidebar */}
-      <aside className="hidden lg:flex w-80 flex-col border-r border-white/5 bg-black/60 backdrop-blur-3xl p-8 relative z-30">
-        <button 
-          onClick={() => router.push("/")}
-          className="group flex items-center gap-3 text-white/30 hover:text-primary transition-all mb-12 text-[10px] font-bold uppercase tracking-[0.2em]"
-        >
-          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-          </div>
-          {t('back_to_hall')}
-        </button>
-
-        <div className="flex-grow space-y-10 overflow-y-auto pr-2 custom-scrollbar">
-          <div className="relative">
-            <div className="w-28 h-28 rounded-[32px] bg-zinc-900 border border-primary/20 p-1 mb-6 relative z-10 overflow-hidden shadow-2xl">
-              <img src={celebrity.avatar} className="w-full h-full object-cover rounded-[28px]" alt={celebrity.name[language]} />
-            </div>
-            <div className="absolute -left-4 -top-4 w-20 h-20 bg-primary/10 blur-3xl rounded-full" />
-            <h2 className="text-3xl font-bold mb-1 tracking-tight">{celebrity.name[language]}</h2>
-            <p className="text-primary text-[10px] font-black tracking-[0.3em] uppercase">{celebrity.title[language]}</p>
-          </div>
-
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <h4 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] flex items-center gap-2">
-                <Clock className="w-3 h-3" />
-                {t('era_background')}
-              </h4>
-              <p className="text-sm text-white/60 font-medium leading-relaxed">
-                {translateEra(celebrity.era, language)} · {celebrity.origin[language]}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] flex items-center gap-2">
-                <BookOpen className="w-3 h-3" />
-                {t('key_works')}
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {celebrity.keyWorks[language].map(work => (
-                  <span key={work} className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-[11px] font-bold text-white/40">
-                    {work}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] flex items-center gap-2">
-                <Info className="w-3 h-3" />
-                {t('core_thoughts')}
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {celebrity.coreThoughts[language].map(thought => (
-                  <span key={thought} className="px-3 py-1.5 rounded-xl bg-primary/5 border border-primary/10 text-[11px] font-bold text-primary/70">
-                    {thought}
-                  </span>
-                ))}
-              </div>
-            </div>
+    <div className="h-screen flex flex-col bg-ink-50">
+      {/* Header */}
+      <header className="h-14 md:h-16 bg-ink-50 border-b border-border flex items-center justify-between px-3 md:px-6 flex-shrink-0 z-40">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/")}
+            className="touch-target w-10 h-10 md:w-8 md:h-8 rounded-lg bg-ink-100 flex items-center justify-center hover:bg-ink-200 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 text-ink-400" />
+          </button>
+          <img
+            src={currentCelebrity.avatar}
+            loading="lazy"
+            alt={currentCelebrity.name[language]}
+            className="w-9 h-9 rounded-full border-2 border-vermilion object-cover"
+            onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentCelebrity.name.en)}&background=c0392b&color=fff&size=72`; }}
+          />
+          <div>
+            <h1 className="text-sm font-bold text-ink-500 leading-tight">{currentCelebrity.name[language]}</h1>
+            <div className="era-tag text-[9px]">{translateEra(currentCelebrity.era, language)}</div>
           </div>
         </div>
-
-        <div className="pt-8 border-t border-white/5 mt-8">
-          <div className="p-5 rounded-[24px] bg-white/5 border border-white/5 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gold-gradient opacity-0 group-hover:opacity-[0.03] transition-opacity" />
-            <p className="text-[9px] text-white/30 font-black uppercase tracking-[0.3em] mb-3">{t('personality_traits')}</p>
-            <div className="flex flex-wrap gap-2">
-              {celebrity.personalityTraits[language].map(trait => (
-                <span key={trait} className="text-xs text-white/60 font-medium">#{trait}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col relative z-20">
-        <header className="h-24 border-b border-white/5 bg-black/40 backdrop-blur-xl flex items-center justify-between px-8">
-          <div className="flex items-center gap-4">
-            <div className="lg:hidden w-12 h-12 rounded-2xl bg-zinc-900 border border-white/10 overflow-hidden p-0.5">
-              <img src={celebrity.avatar} className="w-full h-full object-cover rounded-[14px]" alt={celebrity.name[language]} />
-            </div>
-            <div>
-              <h1 className="font-bold text-xl tracking-tight">{celebrity.name[language]}</h1>
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(212,175,55,0.8)]" />
-                <span className="text-[9px] text-primary font-black uppercase tracking-[0.2em]">{t('soul_active')}</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="w-10 h-10 rounded-xl hover:bg-white/5 transition-colors flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary" />
-            </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="touch-target w-10 h-10 md:w-8 md:h-8 rounded-lg bg-ink-100 flex items-center justify-center hover:bg-ink-200 transition-colors"
+            title={t("chat_history") || "History"}
+          >
+            <History className="w-4 h-4 text-ink-400" />
+          </button>
+          {messages.length > 0 && (
             <button
-              onClick={handleClearChat}
-              title={t("clear_chat")}
-              className="w-10 h-10 rounded-xl hover:bg-white/5 transition-colors flex items-center justify-center"
+              onClick={handleExport}
+              className="touch-target w-10 h-10 md:w-8 md:h-8 rounded-lg bg-ink-100 flex items-center justify-center hover:bg-ink-200 transition-colors"
+              title={t("export") || "Export"}
             >
-              <MoreVertical className="w-5 h-5 text-white/20" />
+              <Download className="w-4 h-4 text-ink-400" />
             </button>
-          </div>
-        </header>
+          )}
+          <button
+            onClick={handleClearChat}
+            className="touch-target w-10 h-10 md:w-8 md:h-8 rounded-lg bg-ink-100 flex items-center justify-center hover:bg-ink-200 transition-colors"
+            title={t("clear_chat") || "Clear"}
+          >
+            <Trash2 className="w-4 h-4 text-ink-400" />
+          </button>
+        </div>
+      </header>
 
-        <div 
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto p-8 space-y-10 scroll-smooth custom-scrollbar"
-        >
-          <div className="max-w-4xl mx-auto space-y-10 pb-12">
+      {/* Chat Area */}
+      <div
+        ref={chatAreaRef}
+        className="flex-1 overflow-y-auto page-transition"
+        style={{ height: "calc(var(--vh, 100vh) - 64px - 80px)" }}
+      >
+        <div ref={scrollRef} className="h-full overflow-y-auto custom-scrollbar">
+          <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
             <AnimatePresence initial={false}>
               {messages.map((msg) => (
                 <motion.div
                   key={msg.id}
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  className={cn(
-                    "flex items-start gap-6",
-                    msg.role === "user" ? "flex-row-reverse" : ""
-                  )}
+                  data-msg-id={msg.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}
                 >
-                  <div className={cn(
-                    "w-12 h-12 rounded-2xl flex-shrink-0 flex items-center justify-center border transition-all duration-500",
-                    msg.role === "assistant" 
-                      ? "bg-zinc-900 border-primary/20 p-0.5 shadow-xl" 
-                      : "bg-gold-gradient border-primary shadow-[0_5px_15px_rgba(212,175,55,0.2)]"
-                  )}>
-                    {msg.role === "assistant" ? (
-                      <img src={celebrity.avatar} className="w-full h-full object-cover rounded-[14px]" alt={celebrity.name[language]} />
-                    ) : (
-                      <User className="w-6 h-6 text-black" />
+                  {msg.role === "assistant" && (
+                    <img
+                      src={currentCelebrity.avatar}
+                      loading="lazy"
+                      alt=""
+                      className="w-8 h-8 rounded-full border border-border object-cover mr-2 mt-1 flex-shrink-0"
+                      onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentCelebrity.name.en)}&background=c0392b&color=fff&size=64`; }}
+                    />
+                  )}
+                  <div className={cn("group relative", msg.role === "user" ? "bubble-user" : "bubble-ai")}>
+                    <div className="msg-content text-[13px] md:text-sm leading-[1.9] whitespace-pre-wrap">
+                      {typewritingMessages.current.has(msg.id) ? "" : msg.content}
+                    </div>
+                    {!typewritingMessages.current.has(msg.id) && !msg.isError && (
+                      <div className="absolute -bottom-7 left-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleCopy(msg.id, msg.content)}
+                          className="p-1 rounded-md hover:bg-ink-100"
+                          aria-label="Copy message"
+                        >
+                          {copiedId === msg.id ? (
+                            <Check className="w-3 h-3 text-green-500" />
+                          ) : (
+                            <Copy className="w-3 h-3 text-ink-300" />
+                          )}
+                        </button>
+                        {msg.role === "assistant" && (
+                          <>
+                            <button
+                              onClick={() => handleFeedback(msg.id, "like")}
+                              className={cn("p-1 rounded-md hover:bg-ink-100", feedbackMap[msg.id] === "like" && "text-vermilion")}
+                              aria-label="Like"
+                            >
+                              <ThumbsUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => handleFeedback(msg.id, "dislike")}
+                              className={cn("p-1 rounded-md hover:bg-ink-100", feedbackMap[msg.id] === "dislike" && "text-ink-400")}
+                              aria-label="Dislike"
+                            >
+                              <ThumbsDown className="w-3 h-3" />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     )}
-                  </div>
-                  
-                  <div className={cn(
-                    "max-w-[80%] space-y-2",
-                    msg.role === "user" ? "items-end" : "items-start"
-                  )}>
-                    <div className={cn(
-                      "p-6 rounded-[28px] text-sm leading-relaxed whitespace-pre-wrap shadow-2xl relative group overflow-hidden",
-                      msg.role === "assistant" 
-                        ? "bg-white/5 border border-white/5 text-white/90" 
-                        : "bg-gold-gradient text-black font-bold"
-                    )}>
-                      {msg.role === "assistant" && (
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-paper.png')] opacity-[0.03] pointer-events-none" />
-                      )}
-                      {msg.content}
-                    </div>
-                    <div className="flex items-center gap-2 px-2">
-                      <History className="w-3 h-3 text-white/10" />
-                      <span className="text-[9px] text-white/20 font-bold uppercase tracking-widest">
-                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
+                    {msg.isError && !isLoading && (
+                      <button
+                        onClick={() => handleRetry(msg.id)}
+                        className="mt-2 text-[11px] text-vermilion hover:text-vermilion-hover transition-colors font-medium"
+                      >
+                        ↻ {t("retry") || "重试"}
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
 
             {isLoading && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-start gap-6"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-primary/20 p-0.5 flex-shrink-0 shadow-xl">
-                  <img src={celebrity.avatar} className="w-full h-full object-cover rounded-[14px]" alt={celebrity.name[language]} />
+              <div className="flex justify-start">
+                <img
+                  src={currentCelebrity.avatar}
+                  alt=""
+                  className="w-8 h-8 rounded-full border border-border object-cover mr-2 mt-1 flex-shrink-0"
+                  onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentCelebrity.name.en)}&background=c0392b&color=fff&size=64`; }}
+                />
+                <div className="bubble-ai">
+                  <div className="flex items-center gap-1.5 py-1">
+                    <span className="w-1.5 h-1.5 bg-vermilion/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1.5 h-1.5 bg-vermilion/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1.5 h-1.5 bg-vermilion/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </div>
+                  {longWait && (
+                    <p className="text-[11px] text-ink-300 mt-1 animate-pulse">{t("long_wait")}</p>
+                  )}
                 </div>
-                <div className="bg-white/5 border border-white/5 p-6 rounded-[28px] flex gap-2">
-                  <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "200ms" }} />
-                  <span className="w-2 h-2 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: "400ms" }} />
-                </div>
-              </motion.div>
+              </div>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Input Area */}
-        <div className="p-8 bg-gradient-to-t from-black via-black/90 to-transparent relative z-40">
-          <div className="max-w-4xl mx-auto relative group">
-            <div className="absolute -inset-1 bg-gold-gradient opacity-10 blur-2xl group-focus-within:opacity-20 transition-opacity rounded-[32px] pointer-events-none" />
-            <div className="relative flex items-end gap-4 bg-[#121212] border border-white/10 rounded-[28px] p-3 pl-6 shadow-2xl focus-within:border-primary/30 transition-all">
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-                placeholder={`${t('input_placeholder')}`}
-                className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-white/80 placeholder:text-white/20 resize-none max-h-40 py-3 font-medium leading-relaxed"
-                rows={1}
-              />
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || isLoading}
-                className={cn(
-                  "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-105 flex-shrink-0",
-                  input.trim() && !isLoading 
-                    ? "bg-gold-gradient text-black shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)]" 
-                    : "bg-white/5 text-white/10"
-                )}
-              >
-                <Send className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="mt-4 flex items-center justify-center gap-4 text-white/10">
-              <div className="h-[1px] w-12 bg-current" />
-              <p className="text-[9px] font-black uppercase tracking-[0.5em]">
-                {t("chat_tagline")}
-              </p>
-              <div className="h-[1px] w-12 bg-current" />
-            </div>
+      {/* Input Area */}
+      <div className="chat-input-wrap flex-shrink-0 z-40">
+        <div className="max-w-3xl mx-auto px-3 md:px-6 py-3">
+          <div className="flex items-end gap-2 bg-white border border-border rounded-xl p-2">
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder={t("input_placeholder")}
+              className="touch-target flex-1 bg-transparent border-none focus:ring-0 text-sm text-ink-500 placeholder:text-ink-300 resize-none max-h-[120px] py-2 leading-relaxed"
+              rows={1}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || isLoading}
+              className={cn(
+                "touch-target btn-send flex items-center justify-center",
+                input.trim() && !isLoading ? "" : "opacity-40 cursor-not-allowed"
+              )}
+            >
+              <Send className="w-4 h-4" />
+            </button>
           </div>
         </div>
-      </main>
+      </div>
+      <ChatHistorySidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onSelect={(cid) => router.push(`/chat/${cid}`)}
+      />
     </div>
   );
 }

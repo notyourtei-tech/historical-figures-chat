@@ -8,17 +8,14 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()" },
   { key: "X-Frame-Options", value: "DENY" },
-  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-  { key: "Cross-Origin-Embedder-Policy", value: "require-corp" },
-  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
 ];
 
 const cspHeader = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' https://api.dicebear.com https://www.transparenttextures.com data: blob:",
-  "font-src 'self' https://fonts.gstatic.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "img-src 'self' https://api.dicebear.com https://www.transparenttextures.com https://ui-avatars.com data: blob:",
+  "font-src 'self' https://fonts.gstatic.com https://fonts.font.im",
   "connect-src 'self' https://openrouter.ai https://*.upstash.io",
   "frame-ancestors 'none'",
   "base-uri 'self'",
@@ -57,6 +54,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "api.dicebear.com" },
       { protocol: "https", hostname: "www.transparenttextures.com" },
+      { protocol: "https", hostname: "api.dicebear.com", pathname: "/9.x/**" },
     ],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 60 * 60 * 24 * 30,

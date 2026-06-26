@@ -1,45 +1,90 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import React, { useState, useEffect, useMemo, lazy, Suspense, useRef, useCallback, memo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { celebrities } from "@/data/celebrities";
 import {
-  ChevronRight,
-  Sparkles,
-  BookOpen,
-  Globe,
   Search,
   History,
-  Star,
-  Brain,
-  X,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
 import { countInterestMatches } from "@/lib/interest-map";
 import { getMbtiRecommendations, mbtiCompatibility, getCelebrityMbti } from "@/lib/mbti-match";
-import { translateCategory, translateEra, translateInterest } from "@/lib/i18n";
+import { translateCategory, translateEra } from "@/lib/i18n";
 import { Language } from "@/types";
 
 const Onboarding = lazy(() => import("@/components/Onboarding"));
 const MBTIPanel = lazy(() => import("@/components/MBTIPanel").then(m => ({ default: m.default })));
-const MbtiBadge = lazy(() => import("@/components/MBTIPanel").then(m => ({ default: m.MbtiBadge })));
+
+const CelebrityCard = memo(function CelebrityCard({ celebrity, language }: { celebrity: (typeof import("@/data/celebrities").celebrities)[number]; language: Language }) {
+  return (
+    <Link href={`/chat/${celebrity.id}`}>
+      <div className="ink-card rounded-xl bg-white p-5 h-full flex flex-col touch-target">
+        <div className="flex items-start gap-3 mb-3">
+          <img
+            src={celebrity.avatar}
+            loading="lazy"
+            alt={celebrity.name[language]}
+            className="w-14 h-14 rounded-full border-2 border-vermilion object-cover flex-shrink-0"
+            onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(celebrity.name.en)}&background=c0392b&color=fff&size=112`; }}
+          />
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-bold text-ink-500 truncate">{celebrity.name[language]}</h3>
+            <div className="vermilion-line" style={{ width: 24, marginTop: 4, marginBottom: 8 }} />
+            <span className="era-tag">{translateEra(celebrity.era, language)}</span>
+          </div>
+        </div>
+        <p className="text-xs text-ink-400 leading-relaxed line-clamp-3 flex-1">
+          {celebrity.description[language]}
+        </p>
+        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
+          <span className="text-[10px] text-ink-300 uppercase tracking-wider">
+            {translateCategory(celebrity.category, language)}
+          </span>
+          <span className="text-[10px] text-vermilion font-medium">
+            {celebrity.keyWorks[language][0]}
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+});
 
 export default function HomePage() {
-  const { language, setLanguage, userProfile, updateUserProfile, t, languageLabel } =
-    useLanguage();
-
+  const { language, setLanguage, userProfile, updateUserProfile, t, languageLabel } = useLanguage();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showMbtiModal, setShowMbtiModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [langOpen, setLangOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!userProfile) {
-      setShowOnboarding(true);
-    }
-  }, [userProfile]);
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+    if (!userProfile) setShowOnboarding(true);
+  }, [userProfile, isClient]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const categories = useMemo(() => {
     const cats = new Set(celebrities.map((c) => c.category));
@@ -54,32 +99,21 @@ export default function HomePage() {
   const filteredCelebrities = useMemo(() => {
     return celebrities
       .filter((c) => {
-        const nameMatch = c.name[language].toLowerCase().includes(searchTerm.toLowerCase());
-        const titleMatch = c.title[language].toLowerCase().includes(searchTerm.toLowerCase());
+        const nameMatch = c.name[language].toLowerCase().includes(debouncedSearch.toLowerCase());
+        const titleMatch = c.title[language].toLowerCase().includes(debouncedSearch.toLowerCase());
         const categoryMatch = selectedCategory === "all" || c.category === selectedCategory;
         return (nameMatch || titleMatch) && categoryMatch;
       })
       .sort((a, b) => {
         const aInterest = countInterestMatches(userProfile?.interests || [], a.interests);
         const bInterest = countInterestMatches(userProfile?.interests || [], b.interests);
-        const aMbti = userProfile?.mbti
-          ? mbtiCompatibility(userProfile.mbti, getCelebrityMbti(a.id) || "")
-          : 0;
-        const bMbti = userProfile?.mbti
-          ? mbtiCompatibility(userProfile.mbti, getCelebrityMbti(b.id) || "")
-          : 0;
+        const aMbti = userProfile?.mbti ? mbtiCompatibility(userProfile.mbti, getCelebrityMbti(a.id) || "") : 0;
+        const bMbti = userProfile?.mbti ? mbtiCompatibility(userProfile.mbti, getCelebrityMbti(b.id) || "") : 0;
         return bMbti * 3 + bInterest - (aMbti * 3 + aInterest);
       });
-  }, [searchTerm, selectedCategory, language, userProfile]);
+  }, [debouncedSearch, selectedCategory, language, userProfile]);
 
-  const interestLabels = useMemo(() => {
-    if (!userProfile?.interests.length) return "";
-    return userProfile.interests
-      .map((id) => translateInterest(id, language))
-      .join(", ");
-  }, [userProfile?.interests, language]);
-
-  if (showOnboarding) {
+  if (isClient && showOnboarding) {
     return (
       <Suspense fallback={null}>
         <Onboarding onComplete={() => setShowOnboarding(false)} />
@@ -88,359 +122,185 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen selection:bg-primary/30">
-      <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-black/40 backdrop-blur-xl">
-        <div className="container mx-auto px-6 h-20 flex items-center justify-between">
+    <div className="min-h-screen flex flex-col relative">
+      <div id="ink-bg" />
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-ink-50/90 backdrop-blur-sm border-b border-border">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <motion.div
-              whileHover={{ rotate: 180 }}
-              transition={{ duration: 0.8 }}
-              className="w-10 h-10 rounded-xl bg-gold-gradient flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+            <History className="w-5 h-5 text-vermilion" />
+            <span className="text-lg md:text-xl font-bold text-ink-500 tracking-tight">{t("app_name")}</span>
+          </div>
+
+          <div className="relative" ref={langRef}>
+            <button
+              onClick={() => setLangOpen(!langOpen)}
+              className="touch-target flex items-center gap-2 px-3 py-1.5 rounded-lg bg-ink-100 text-xs font-medium text-ink-400 hover:bg-ink-200 transition-colors"
             >
-              <History className="text-black w-6 h-6" />
-            </motion.div>
-            <span className="text-2xl font-bold gold-text tracking-tighter">
-              {t("app_name")}
-            </span>
-          </div>
-
-          <div className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-[0.2em] text-white/40">
-            <a href="#" className="hover:text-primary transition-colors">
-              {t("explore")}
-            </a>
-            <a href="#" className="hover:text-primary transition-colors">
-              {t("wisdom_library")}
-            </a>
-            <a href="#" className="hover:text-primary transition-colors">
-              {t("about_us")}
-            </a>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="relative group">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-white/60 hover:border-primary/50 transition-all">
-                <Globe className="w-4 h-4" />
-                {languageLabel(language)}
-              </button>
-              <div className="absolute right-0 top-full mt-2 w-40 bg-zinc-900 border border-white/10 rounded-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all p-2 z-[60]">
+              <Globe className="w-3.5 h-3.5" />
+              {languageLabel(language)}
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 top-full mt-2 w-36 bg-white border border-border rounded-lg shadow-lg p-1 z-[60]">
                 {(["zh", "en", "ja", "vi", "my"] as Language[]).map((lang) => (
                   <button
                     key={lang}
-                    onClick={() => setLanguage(lang)}
+                    onClick={() => { setLanguage(lang); setLangOpen(false); }}
                     className={cn(
-                      "w-full text-left px-3 py-2 text-[10px] font-bold hover:bg-white/5 rounded-lg transition-colors",
-                      language === lang && "text-primary"
+                      "touch-target w-full text-left px-3 py-2 text-xs rounded-md transition-colors",
+                      language === lang ? "text-vermilion font-bold bg-vermilion-light" : "text-ink-400 hover:bg-ink-50"
                     )}
                   >
                     {languageLabel(lang)}
                   </button>
                 ))}
               </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="flex-grow pt-32 pb-20 container mx-auto px-6">
-        <section className="mb-20 relative">
-          <div className="absolute -left-20 -top-20 w-96 h-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="text-center"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-bold text-primary uppercase tracking-[0.3em] mb-8">
-              <Sparkles className="w-3 h-3" />
-              {t("hero_badge")}
-            </div>
-            <h1 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter leading-tight">
-              {t("hero_title")}
-            </h1>
-            <p className="text-lg md:text-xl text-white/40 max-w-2xl mx-auto leading-relaxed mb-12 font-medium">
-              {t("hero_subtitle")}
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <div className="flex -space-x-4">
-                {celebrities.slice(0, 8).map((c) => (
-                  <motion.img
-                    key={c.id}
-                    whileHover={{ scale: 1.2, zIndex: 10 }}
-                    src={c.avatar}
-                    loading="lazy"
-                    className="w-12 h-12 rounded-2xl border-2 border-black bg-zinc-900"
-                    alt={c.name[language]}
-                  />
-                ))}
-              </div>
-              <div className="h-10 w-[1px] bg-white/10 hidden sm:block" />
-              <div className="text-left space-y-2">
-                <p className="text-sm font-bold text-white/80 tracking-tight">
-                  {userProfile?.name
-                    ? t("welcome_user", { name: userProfile.name })
-                    : t("find_mentor")}
-                </p>
-                {userProfile?.mbti && (
-                  <Suspense fallback={null}>
-                    <MbtiBadge type={userProfile.mbti} />
-                  </Suspense>
-                )}
-                <p className="text-[10px] text-white/30 uppercase tracking-widest">
-                  {userProfile?.interests.length
-                    ? t("based_on_interests", { interests: interestLabels })
-                    : t("souls_ready", { count: celebrities.length })}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </section>
-
-        {/* MBTI 性格推荐区 */}
-        <section className="mb-16">
-          <div className="rounded-[32px] border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-8 md:p-10">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gold-gradient flex items-center justify-center flex-shrink-0">
-                  <Brain className="w-6 h-6 text-black" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">{t("mbti_section_title")}</h2>
-                  <p className="text-sm text-white/40">{t("mbti_section_subtitle")}</p>
-                </div>
-              </div>
-              {userProfile?.mbti ? (
-                <button
-                  onClick={() => setShowMbtiModal(true)}
-                  className="px-5 py-2.5 rounded-xl border border-white/10 text-xs font-bold text-white/50 hover:border-primary/30 hover:text-primary transition-all"
-                >
-                  {t("mbti_change")}
-                </button>
-              ) : (
-                <button
-                  onClick={() => setShowMbtiModal(true)}
-                  className="px-6 py-3 rounded-2xl bg-gold-gradient text-black font-bold text-sm shadow-[0_5px_20px_rgba(212,175,55,0.3)]"
-                >
-                  {t("mbti_start_now")}
-                </button>
-              )}
-            </div>
-
-            {userProfile?.mbti ? (
-              <>
-                <p className="text-xs font-bold text-primary/70 uppercase tracking-widest mb-6">
-                  {t("mbti_recommended_for", { type: userProfile.mbti })}
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {mbtiRecommendations.map((celebrity) => {
-                    const score = mbtiCompatibility(
-                      userProfile.mbti!,
-                      getCelebrityMbti(celebrity.id) || ""
-                    );
-                    return (
-                      <Link key={celebrity.id} href={`/chat/${celebrity.id}`}>
-                        <div className="group p-5 rounded-2xl border border-white/10 bg-black/40 hover:border-primary/40 transition-all h-full">
-                          <div className="flex items-center gap-3 mb-4">
-                          <img
-                            src={celebrity.avatar}
-                            loading="lazy"
-                            alt={celebrity.name[language]}
-                            className="w-12 h-12 rounded-xl border border-white/10"
-                          />
-                            <div>
-                              <h3 className="font-bold">{celebrity.name[language]}</h3>
-                              <p className="text-[10px] text-primary/70">
-                                {getCelebrityMbti(celebrity.id)}
-                              </p>
-                            </div>
-                          </div>
-                          <p className="text-xs text-white/40 line-clamp-2 mb-3">
-                            {celebrity.description[language]}
-                          </p>
-                          <span className="text-[9px] font-bold uppercase tracking-widest text-primary/60">
-                            {score >= 3 ? t("mbti_match_perfect") : t("mbti_match_good")}
-                          </span>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </>
-            ) : (
-              <p className="text-center text-white/30 text-sm py-6">
-                {t("mbti_not_set")}
-              </p>
             )}
           </div>
-        </section>
+        </div>
+      </header>
 
-        <section className="mb-12 space-y-8">
-          <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
-            <div className="relative w-full md:w-96 group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 md:px-6 py-8 md:py-12">
+        <div className="bg-gradient-to-br from-vermilion/5 via-white to-vermilion/3 p-8 md:p-12 rounded-2xl mb-10 text-center border border-vermilion/10 shadow-sm">
+          <h1 className="text-3xl md:text-4xl font-bold text-ink-500 mb-4 font-serif leading-relaxed">
+            {t("hero_title")}
+          </h1>
+          <div className="w-12 h-0.5 bg-vermilion mx-auto mb-5" />
+          <p className="text-sm md:text-base text-ink-400 max-w-xl mx-auto mb-6 leading-relaxed">
+            {t("hero_subtitle")}
+          </p>
+          <p className="text-xs text-ink-300">
+            {isClient && userProfile?.name
+              ? t("welcome_user", { name: userProfile.name })
+              : t("souls_ready", { count: celebrities.length })}
+          </p>
+        </div>
+
+        {/* MBTI Section */}
+        {isClient && userProfile?.mbti && mbtiRecommendations.length > 0 && (
+          <section className="mb-10 md:mb-14">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-bold text-ink-500">{t("mbti_section_title")}</h2>
+                <p className="text-xs text-ink-300 mt-1">{t("mbti_recommended_for", { type: userProfile.mbti })}</p>
+              </div>
+              <button
+                onClick={() => setShowMbtiModal(true)}
+                className="touch-target text-xs text-vermilion hover:text-vermilion-hover transition-colors"
+              >
+                {t("mbti_change")}
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {mbtiRecommendations.map((c) => (
+                <Link key={c.id} href={`/chat/${c.id}`}>
+                  <div className="ink-card rounded-lg p-3 bg-white touch-target">
+                    <div className="flex items-center gap-2 mb-2">
+                      <img src={c.avatar} loading="lazy" alt={c.name[language]} className="w-8 h-8 rounded-full border-2 border-vermilion object-cover" onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name.en)}&background=c0392b&color=fff&size=64`; }} />
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-bold text-ink-500 truncate">{c.name[language]}</h3>
+                        <p className="text-[10px] text-ink-300">{getCelebrityMbti(c.id)}</p>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-ink-400 line-clamp-2">{c.description[language]}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Search & Filter */}
+        <section className="mb-6 md:mb-8">
+          <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-300" />
               <input
                 type="text"
                 placeholder={t("search_sages")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-sm focus:outline-none focus:border-primary/50 transition-all placeholder:text-white/20"
+                className="touch-target w-full bg-white border border-border rounded-lg py-2.5 pl-10 pr-4 text-sm text-ink-500 placeholder:text-ink-300 focus:outline-none focus:border-vermilion/30 transition-colors"
               />
             </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="flex gap-2 overflow-x-auto char-bar pb-1 md:pb-0">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
                   className={cn(
-                    "px-6 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all",
+                    "touch-target px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap flex-shrink-0",
                     selectedCategory === cat
-                      ? "bg-primary text-black shadow-[0_5px_15px_rgba(212,175,55,0.3)]"
-                      : "bg-white/5 border border-white/10 text-white/40 hover:border-white/30"
+                      ? "bg-vermilion text-white"
+                      : "bg-white border border-border text-ink-400 hover:border-vermilion/30"
                   )}
                 >
-                  {cat === "all"
-                    ? t("all")
-                    : translateCategory(cat as Parameters<typeof translateCategory>[0], language)}
+                  {cat === "all" ? t("all") : translateCategory(cat as Parameters<typeof translateCategory>[0], language)}
                 </button>
               ))}
             </div>
           </div>
         </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {/* Character Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
           <AnimatePresence mode="popLayout">
-            {filteredCelebrities.map((celebrity, index) => {
-              const isInterestMatch =
-                countInterestMatches(userProfile?.interests || [], celebrity.interests) > 0;
-              const isMbtiMatch =
-                userProfile?.mbti &&
-                mbtiCompatibility(userProfile.mbti, getCelebrityMbti(celebrity.id) || "") >= 3;
-
-              return (
-                <motion.div
-                  key={celebrity.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.5, delay: index * 0.03 }}
-                >
-                  <Link href={`/chat/${celebrity.id}`}>
-                    <div className="historical-card group p-8 rounded-[32px] border border-white/5 h-full flex flex-col relative">
-                      {(isInterestMatch || isMbtiMatch) && (
-                        <div className="absolute top-6 right-6 flex flex-col gap-1 items-end">
-                          {isMbtiMatch && (
-                            <span className="text-[8px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                              {t("mbti_match")}
-                            </span>
-                          )}
-                          {isInterestMatch && (
-                            <Star className="w-4 h-4 text-primary fill-primary" />
-                          )}
-                        </div>
-                      )}
-
-                      <div className="mb-8 relative">
-                        <div className="w-20 h-20 rounded-3xl bg-zinc-900 border border-white/10 p-1 group-hover:border-primary/50 transition-all overflow-hidden relative z-10">
-                          <img
-                            src={celebrity.avatar}
-                            loading="lazy"
-                            alt={celebrity.name[language]}
-                            className="w-full h-full object-cover rounded-2xl"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex-grow">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-2xl font-bold tracking-tight">
-                            {celebrity.name[language]}
-                          </h3>
-                          <div className="h-1 w-1 rounded-full bg-white/20" />
-                          <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest">
-                            {translateCategory(celebrity.category, language)}
-                          </span>
-                        </div>
-                        <p className="text-xs font-medium text-primary/80 uppercase tracking-[0.2em] mb-4">
-                          {celebrity.title[language]}
-                        </p>
-                        <p className="text-white/40 text-sm leading-relaxed mb-4 line-clamp-3 font-medium">
-                          {celebrity.description[language]}
-                        </p>
-                        <p className="text-[10px] text-white/20 mb-4">
-                          {translateEra(celebrity.era, language)} · {celebrity.origin[language]}
-                        </p>
-                      </div>
-
-                      <div className="space-y-6 pt-6 border-t border-white/5">
-                        <div className="flex flex-wrap gap-2">
-                          {celebrity.expertise[language].slice(0, 2).map((exp) => (
-                            <span
-                              key={exp}
-                              className="px-2 py-1 rounded-lg bg-white/5 text-[9px] font-bold text-white/30 uppercase tracking-widest"
-                            >
-                              {exp}
-                            </span>
-                          ))}
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-[10px] font-bold text-white/20 uppercase tracking-tighter">
-                            <BookOpen className="w-3 h-3" />
-                            <span>{celebrity.keyWorks[language][0]}</span>
-                          </div>
-                          <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-primary transition-all duration-500 group-hover:rotate-[360deg]">
-                            <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-black" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              );
-            })}
+            {filteredCelebrities.length === 0 && (
+              <div className="col-span-full text-center py-16">
+                <p className="text-ink-300 text-sm">{t("no_results")}</p>
+              </div>
+            )}
+            {filteredCelebrities.map((celebrity, index) => (
+              <motion.div
+                key={celebrity.id}
+                layout
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.3, delay: index * 0.03 }}
+              >
+                <CelebrityCard celebrity={celebrity} language={language} />
+              </motion.div>
+            ))}
           </AnimatePresence>
         </div>
       </main>
 
-      <footer className="border-t border-white/5 py-16 bg-black/80 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-paper.png')] opacity-20 pointer-events-none" />
-        <div className="container mx-auto px-6 text-center relative z-10">
-          <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-8">
-            <History className="text-white/20 w-6 h-6" />
-          </div>
-          <p className="text-white/20 text-[10px] font-bold uppercase tracking-[0.5em]">
-            {t("footer_copyright")} · {t("rights_reserved")}
+      {/* Footer */}
+      <footer className="border-t border-border py-8 bg-ink-100/50">
+        <div className="max-w-6xl mx-auto px-6 text-center">
+          <History className="w-5 h-5 text-ink-300 mx-auto mb-3" />
+          <p className="text-[10px] text-ink-300 uppercase tracking-widest">
+            {t("footer_copyright")}
           </p>
         </div>
       </footer>
 
-      {/* MBTI 弹窗 */}
+      {/* MBTI Modal */}
       <AnimatePresence>
         {showMbtiModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6"
+            className="fixed inset-0 z-[200] bg-ink-500/30 backdrop-blur-sm flex items-end md:items-center justify-center p-0 md:p-6"
             onClick={() => setShowMbtiModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg glass p-8 rounded-[32px] border border-primary/20 relative max-h-[85vh] overflow-y-auto"
+              className="w-full max-w-lg bg-white rounded-t-2xl md:rounded-2xl p-6 md:p-8 relative max-h-[85vh] overflow-y-auto"
             >
+              <div className="md:hidden w-10 h-1 rounded-full bg-ink-200 mx-auto mb-4" />
               <button
                 onClick={() => setShowMbtiModal(false)}
-                className="absolute top-6 right-6 w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10"
+                className="absolute top-4 right-4 w-10 h-10 md:w-8 md:h-8 rounded-lg bg-ink-100 flex items-center justify-center text-ink-400 hover:bg-ink-200 transition-colors"
               >
-                <X className="w-4 h-4" />
+                ×
               </button>
-              <h3 className="text-xl font-bold mb-6 pr-10">{t("mbti_step_title")}</h3>
+              <h3 className="text-lg font-bold text-ink-500 mb-4 pr-8">{t("mbti_step_title")}</h3>
               <Suspense fallback={null}>
                 <MBTIPanel
                   onComplete={(type) => {

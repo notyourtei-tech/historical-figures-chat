@@ -112,13 +112,13 @@ async function requestCompletion(
     const content = data.choices?.[0]?.message?.content?.trim();
 
     if (!content) {
-      throw new Error("AI 返回空内容");
+      throw new Error("AI_EMPTY_RESPONSE");
     }
 
     return { content, provider: provider.name, model };
   } catch (error: unknown) {
     if (error instanceof Error && error.name === "AbortError") {
-      throw new Error(`请求超时（${REQUEST_TIMEOUT_MS / 1000}s）: ${provider.name}/${model}`);
+      throw new Error(`REQUEST_TIMEOUT: ${provider.name}/${model}`);
     }
     throw error;
   } finally {
@@ -139,9 +139,9 @@ export async function callChatCompletion(
   for (const provider of providers) {
     for (const model of provider.models) {
       try {
-        console.log(`[AI] 尝试 ${provider.name}/${model}`);
+        console.log(`[AI] Trying ${provider.name}/${model}`);
         const result = await requestCompletion(provider, model, messages, options);
-        console.log(`[AI] 成功使用 ${model}`);
+        console.log(`[AI] Success with ${model}`);
         return result;
       } catch (error: unknown) {
         const message =
@@ -151,16 +151,16 @@ export async function callChatCompletion(
         // 检查是否是速率限制错误
         if (message.startsWith("RATE_LIMIT_429:")) {
           isRateLimited = true;
-          console.warn(`[AI] ${provider.name}/${model} 触发速率限制，尝试下一个模型...`);
+          console.warn(`[AI] ${provider.name}/${model} rate limited, trying next...`);
         } else {
-          console.warn(`[AI] ${provider.name}/${model} 失败:`, message.slice(0, 160));
+          console.warn(`[AI] ${provider.name}/${model} failed:`, message.slice(0, 160));
         }
       }
     }
   }
 
   if (isRateLimited) {
-    throw new Error("RATE_LIMIT_EXCEEDED: 免费模型的调用次数暂时用完了，请稍后再试，或者升级您的 OpenRouter 账户。");
+    throw new Error("RATE_LIMIT_EXCEEDED");
   }
 
   if (lastError) throw new Error(lastError);

@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { HtmlLangSync } from "@/components/HtmlLangSync";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-
-const inter = Inter({ subsets: ["latin"], display: "swap" });
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 export const metadata: Metadata = {
-  title: "Epochs of Wisdom - AI Dialogue with Historical Figures",
-  description: "Break the chains of time and space. Dialogue with the greatest minds in history via deep AI.",
+  title: "Epochs of Wisdom / 万古灵犀",
+  description: "Dialogue with Great Minds across time and space. Powered by deep AI.",
 };
 
 export default function RootLayout({
@@ -19,12 +17,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className="dark">
-      <body className={cn(inter.className, "min-h-screen bg-[#0A0A0A] text-white selection:bg-primary/30")}>
+    <html lang="zh-CN">
+      <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link
+          href="https://fonts.font.im/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className={cn("min-h-screen bg-ink-50 text-ink-500 font-serif antialiased")}>
+        <div id="ink-bg" />
         <ErrorBoundary>
           <LanguageProvider>
+            <ScrollToTop />
             <HtmlLangSync />
-            <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(212,175,55,0.05),transparent_50%)] pointer-events-none" />
             {children}
           </LanguageProvider>
         </ErrorBoundary>

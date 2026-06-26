@@ -24,6 +24,7 @@ export interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
+  isError?: boolean;
 }
 
 export interface UserProfile {

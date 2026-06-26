@@ -2,97 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 7%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 45 65% 53%;
-    --primary-foreground: 0 0% 10%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 45 65% 53%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
-    --accent: 45 65% 53%;
-    --accent-foreground: 0 0% 10%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 45 65% 53%;
-    --radius: 0.75rem;
-    --gold-gradient: linear-gradient(135deg, #D4AF37 0%, #F5D76E 50%, #D4AF37 100%);
-  }
+:root {
+  --background: #f7f4ee;
+  --foreground: #1a1714;
+  --vh: 100vh;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    background-image: 
-      radial-gradient(circle at 50% 50%, rgba(212,175,55,0.03) 0%, transparent 100%),
-      url('https://www.transparenttextures.com/patterns/dark-matter.png');
-  }
-}
-
-.glass {
-  background: rgba(15, 15, 15, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(212, 175, 55, 0.15);
-}
-
-.gold-text {
-  @apply bg-clip-text text-transparent bg-gold-gradient;
-}
-
-.gold-border {
-  border: 1px solid transparent;
-  background-image: linear-gradient(rgba(26, 26, 26, 0.6), rgba(26, 26, 26, 0.6)), var(--gold-gradient);
-  background-origin: border-box;
-  background-clip: content-box, border-box;
-}
-
-/* Historical texture elements */
-.paper-texture {
-  background-image: url('https://www.transparenttextures.com/patterns/papyros.png');
-}
-
-.ink-wash {
-  mask-image: radial-gradient(circle at center, black 50%, transparent 100%);
-  -webkit-mask-image: radial-gradient(circle at center, black 50%, transparent 100%);
-}
-
-.historical-card {
-  @apply relative overflow-hidden transition-all duration-700;
-  background: linear-gradient(145deg, rgba(20, 20, 20, 0.9), rgba(10, 10, 10, 0.95));
-  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-}
-
-.historical-card::before {
-  content: "";
-  @apply absolute inset-0 opacity-0 transition-opacity duration-700 pointer-events-none;
-  background-image: url('https://www.transparenttextures.com/patterns/black-paper.png');
-}
-
-.historical-card:hover::before {
-  @apply opacity-20;
-}
-
-.historical-card::after {
-  content: "";
-  @apply absolute -inset-[100%] opacity-0 transition-opacity duration-700 pointer-events-none;
-  background: radial-gradient(circle at center, rgba(212,175,55,0.1) 0%, transparent 70%);
-}
-
-.historical-card:hover::after {
-  @apply opacity-100;
+body {
+  background-color: #f7f4ee;
+  color: #1a1714;
+  font-family: 'Noto Serif SC', serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 ::-webkit-scrollbar {
@@ -100,20 +21,21 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-transparent;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-primary/20 rounded-full;
+  background: rgba(26,23,20,0.15);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary/40;
+  background: rgba(26,23,20,0.25);
 }
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(212, 175, 55, 0.2) transparent;
+  scrollbar-color: rgba(26,23,20,0.15) transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -125,10 +47,149 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(26,23,20,0.15);
   border-radius: 9999px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.4);
+#ink-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 25%, rgba(192,57,43,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 70% at 85% 75%, rgba(26,23,20,0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(192,57,43,0.03) 0%, transparent 60%);
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: #c0392b;
+  margin-left: 2px;
+  animation: blink 0.8s step-end infinite;
+  vertical-align: middle;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.fade-seq {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.fade-seq.visible {
+  opacity: 1;
+  transform: none;
+}
+
+.vermilion-line {
+  width: 32px;
+  height: 2px;
+  background: #c0392b;
+  margin: 6px 0 12px;
+}
+
+.era-tag {
+  font-size: 11px;
+  border: 0.5px solid #c0392b;
+  color: #c0392b;
+  padding: 2px 8px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.bubble-user {
+  background: #1a1714;
+  color: #f7f4ee;
+  border-radius: 12px 2px 12px 12px;
+  max-width: 70%;
+  padding: 12px 16px;
+}
+
+.bubble-ai {
+  background: #ffffff;
+  color: #1a1714;
+  border: 1px solid rgba(26,23,20,0.12);
+  border-radius: 2px 12px 12px 12px;
+  max-width: 70%;
+  padding: 12px 16px;
+}
+
+@media (max-width: 768px) {
+  .bubble-user,
+  .bubble-ai {
+    max-width: 85%;
+    padding: 10px 14px;
+  }
+  .era-tag {
+    font-size: 10px;
+  }
+  .vermilion-line {
+    width: 24px;
+  }
+}
+
+.char-bar {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.char-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.touch-target {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.chat-input-wrap {
+  background: #f7f4ee;
+  border-top: 1px solid rgba(26,23,20,0.1);
+}
+
+.page-transition {
+  transition: opacity 0.15s ease;
+}
+
+.ink-card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(26,23,20,0.08);
+}
+
+.ink-card:hover {
+  border-color: rgba(192,57,43,0.3);
+  box-shadow: 0 4px 20px rgba(26,23,20,0.06);
+}
+
+.btn-send {
+  background: #c0392b;
+  color: #fff;
+  border-radius: 8px;
+  min-width: 48px;
+  min-height: 44px;
+  transition: background 0.2s ease;
+}
+
+.btn-send:hover {
+  background: #a93226;
+}
+
+.btn-send:disabled {
+  background: rgba(26,23,20,0.15);
+  color: rgba(26,23,20,0.3);
+}
+
+@media (max-width: 768px) {
+  .chat-input-wrap textarea {
+    font-size: 16px !important;
+  }
 }

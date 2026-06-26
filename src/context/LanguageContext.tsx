@@ -5,6 +5,14 @@ import { Language, UserProfile } from "@/types";
 import { translations, formatTranslation } from "@/lib/translations";
 import { LANGUAGE_LABELS } from "@/lib/i18n";
 
+const DEFAULT_NAMES: Record<Language, string> = {
+  zh: "友君",
+  en: "Friend",
+  ja: "友",
+  vi: "Bạn",
+  my: "မိတ်ဆွေ",
+};
+
 const VALID_LANGUAGES: Language[] = ["zh", "en", "ja", "vi", "my"];
 
 function isValidUserProfile(data: unknown): data is UserProfile {
@@ -101,7 +109,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       setLanguageState(lang);
       setUserProfileState((prev) => {
         if (!prev) return prev;
-        const updated = { ...prev, language: lang };
+        const oldDefaultNames = Object.values(DEFAULT_NAMES);
+        const newName = oldDefaultNames.includes(prev.name) ? DEFAULT_NAMES[lang] : prev.name;
+        const updated = { ...prev, language: lang, name: newName };
         if (isClient) {
           try {
             localStorage.setItem("user_profile", JSON.stringify(updated));

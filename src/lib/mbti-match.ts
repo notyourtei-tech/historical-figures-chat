@@ -18,7 +18,7 @@ export const CELEBRITY_MBTI: Record<string, string> = {
   huineng: "INFJ",
   // 中国哲学家
   zhuangzi: "INFP",
-  mengzi: "ENFJ",
+  mengzi: "ISTJ",
   xunzi: "INTJ",
   // 中国文学家
   quyuan: "INFJ",

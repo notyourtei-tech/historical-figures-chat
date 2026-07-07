@@ -1,0 +1,112 @@
+<!-- 主页：古人选择 -->
+<wxs module="i18n" src="../../utils/i18n.wxs"></wxs>
+<view class="page">
+  <!-- Header -->
+  <view class="header">
+    <view class="header-title">📜 {{i18n.t(language, 'app_name')}}</view>
+    <view class="header-lang" bindtap="toggleLang">
+      <text>{{langLabel}}</text>
+    </view>
+  </view>
+
+  <!-- 语言切换下拉 -->
+  <view class="lang-dropdown" wx:if="{{showLangMenu}}">
+    <view
+      class="lang-item {{language === 'zh' ? 'active' : ''}}"
+      bindtap="switchLanguage"
+      data-lang="zh"
+    >中文</view>
+    <view
+      class="lang-item {{language === 'en' ? 'active' : ''}}"
+      bindtap="switchLanguage"
+      data-lang="en"
+    >English</view>
+    <view
+      class="lang-item {{language === 'ja' ? 'active' : ''}}"
+      bindtap="switchLanguage"
+      data-lang="ja"
+    >日本語</view>
+    <view
+      class="lang-item {{language === 'vi' ? 'active' : ''}}"
+      bindtap="switchLanguage"
+      data-lang="vi"
+    >Tiếng Việt</view>
+    <view
+      class="lang-item {{language === 'my' ? 'active' : ''}}"
+      bindtap="switchLanguage"
+      data-lang="my"
+    >မြန်မာ</view>
+  </view>
+
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-inner">
+      <text class="hero-title">{{i18n.t(language, 'hero_title')}}</text>
+      <text class="hero-subtitle">{{i18n.t(language, 'hero_subtitle')}}</text>
+      <text class="hero-stats">{{userName}}</text>
+    </view>
+  </view>
+
+  <!-- 搜索 -->
+  <view class="search-bar">
+    <input
+      class="search-input"
+      placeholder="{{i18n.t(language, 'search_sages')}}"
+      value="{{searchTerm}}"
+      bindinput="onSearch"
+      confirm-type="search"
+    />
+  </view>
+
+  <!-- 分类筛选 -->
+  <scroll-view class="category-scroll" scroll-x>
+    <view class="category-list">
+      <view
+        class="category-item {{selectedCategory === 'all' ? 'active' : ''}}"
+        bindtap="selectCategory"
+        data-cat="all"
+      >{{i18n.t(language, 'all')}}</view>
+      <view
+        wx:for="{{categories}}"
+        wx:key="*this"
+        class="category-item {{selectedCategory === item ? 'active' : ''}}"
+        bindtap="selectCategory"
+        data-cat="{{item}}"
+      >{{item}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 人物列表 -->
+  <view class="celebrities-grid" wx:if="{{filteredCelebrities.length > 0}}">
+    <celebrity-card
+      wx:for="{{filteredCelebrities}}"
+      wx:key="id"
+      celebrity="{{item}}"
+      language="{{language}}"
+      bind:tap="goToChat"
+    />
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:if="{{filteredCelebrities.length === 0}}">
+    <text class="empty-text">{{i18n.t(language, 'no_results')}}</text>
+  </view>
+
+  <!-- 历史记录 -->
+  <view class="history-section" wx:if="{{chatHistoryList.length > 0}}">
+    <view class="section-title">{{i18n.t(language, 'chat_history')}}</view>
+    <view
+      wx:for="{{chatHistoryList}}"
+      wx:key="id"
+      class="history-item"
+      bindtap="goToChat"
+      data-id="{{item.id}}"
+    >
+      <text class="history-name">{{item.name}}</text>
+      <text class="history-msg">{{item.lastMessage}}</text>
+    </view>
+  </view>
+
+  <!-- 遮罩 -->
+  <view class="overlay" wx:if="{{showLangMenu}}" bindtap="toggleLang"></view>
+</view>

@@ -33,6 +33,10 @@ function isAllowedOrigin(req: NextRequest): boolean {
     }
   }
 
+  if (!origin && !req.headers.get("referer") && process.env.NODE_ENV === "production") {
+    return false;
+  }
+
   return true;
 }
 

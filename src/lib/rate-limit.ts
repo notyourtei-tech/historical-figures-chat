@@ -109,12 +109,11 @@ export function isValidCelebrityId(id: string): boolean {
 
 export function sanitizeInput(text: string, maxLength: number = 2000): string {
   return text
-    .replace(/<[^>]*>/g, "")
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
     .replace(/javascript:/gi, "")
-    .replace(/data:/gi, "")
+    .replace(/data:text\/html/gi, "")
     .replace(/vbscript:/gi, "")
-    .replace(/on\w+\s*=/gi, "")
-    .replace(/expression\s*\(/gi, "")
+    .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, "")
     .replace(/\x00/g, "")
     .trim()
     .slice(0, maxLength);

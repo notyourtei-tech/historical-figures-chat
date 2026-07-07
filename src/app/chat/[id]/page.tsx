@@ -97,17 +97,21 @@ export default function ChatPage() {
   const [feedbackMap, setFeedbackMap] = useState<Record<string, "like" | "dislike">>({});
   const [longWait, setLongWait] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const greetingFetchId = useRef(0);
   const chatAreaRef = useRef<HTMLDivElement>(null);
   const renderedMessages = useRef<Set<string>>(new Set());
   const typewritingMessages = useRef<Set<string>>(new Set());
+  const isNearBottom = useRef(true);
+  const initializedForId = useRef<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  // Initial load: fetch greeting when entering a new celebrity chat
   useEffect(() => {
     if (!isClient) return;
 
@@ -119,10 +123,9 @@ export default function ChatPage() {
 
     setCelebrity(found);
 
-    const savedLang = localStorage.getItem(`chat_lang_${id}`);
-    if (savedLang && savedLang !== language) {
-      localStorage.setItem(`chat_lang_${id}`, language);
-    }
+    // Only run greeting fetch once per celebrity id
+    if (initializedForId.current === id) return;
+    initializedForId.current = id;
 
     const savedMessages = localStorage.getItem(`chat_history_${id}`);
     if (savedMessages) {
@@ -157,7 +160,14 @@ export default function ChatPage() {
       .finally(() => {
         if (fetchId === greetingFetchId.current) setIsLoading(false);
       });
-  }, [id, router, isClient, language]);
+  }, [id, isClient, language]);
+
+  // When language changes during an active chat, save preference for next messages
+  useEffect(() => {
+    if (celebrity && isClient) {
+      localStorage.setItem(`chat_lang_${celebrity.id}`, language);
+    }
+  }, [language, celebrity, isClient]);
 
   useEffect(() => {
     if (!isClient || !celebrity || messages.length === 0) return;
@@ -167,10 +177,29 @@ export default function ChatPage() {
   }, [messages, celebrity, isClient, language]);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const el = scrollRef.current;
+    if (!el) return;
+    if (isNearBottom.current) {
+      el.scrollTop = el.scrollHeight;
     }
   }, [messages, isLoading]);
+
+  // Track scroll position to know if user is near bottom
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const threshold = 120;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+    isNearBottom.current = nearBottom;
+    setShowScrollBtn(!nearBottom && messages.length > 0);
+  }, [messages.length]);
+
+  const scrollToBottom = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    isNearBottom.current = true;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, []);
 
   useEffect(() => {
     const ta = textareaRef.current;
@@ -183,15 +212,9 @@ export default function ChatPage() {
     const updateViewportHeight = () => {
       const vh = window.visualViewport?.height || window.innerHeight;
       document.documentElement.style.setProperty("--vh", `${vh}px`);
-      const chatBox = chatAreaRef.current;
-      if (chatBox) {
-        const topBar = 64;
-        const inputBar = 80;
-        chatBox.style.height = `${vh - topBar - inputBar}px`;
-      }
     };
-    window.visualViewport?.addEventListener("resize", updateViewportHeight);
     updateViewportHeight();
+    window.visualViewport?.addEventListener("resize", updateViewportHeight);
     return () => window.visualViewport?.removeEventListener("resize", updateViewportHeight);
   }, []);
 
@@ -308,12 +331,17 @@ export default function ChatPage() {
       timestamp: Date.now(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    let previousMessages: Message[] = [];
+    setMessages((prev) => {
+      previousMessages = prev;
+      return [...prev, userMessage];
+    });
     setInput("");
     setIsLoading(true);
 
     try {
-      const response = await chatWithCelebrity(celebrity, [...messages, userMessage], language);
+      const allMessages = [...previousMessages, userMessage];
+      const response = await chatWithCelebrity(celebrity, allMessages, language);
       const assistantMessage: Message = {
         id: generateId(),
         role: "assistant",
@@ -335,20 +363,24 @@ export default function ChatPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [input, celebrity, isLoading, messages, language, t]);
+  }, [input, celebrity, isLoading, language, t]);
 
   const handleRetry = useCallback(async (errorMessageId: string) => {
     if (!celebrity || isLoading) return;
 
-    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+    let currentMessages: Message[] = [];
+    setMessages((prev) => {
+      currentMessages = prev.filter((m) => m.id !== errorMessageId);
+      return currentMessages;
+    });
+
+    const lastUserMsg = [...currentMessages].reverse().find((m) => m.role === "user");
     if (!lastUserMsg) return;
 
-    setMessages((prev) => prev.filter((m) => m.id !== errorMessageId));
     setIsLoading(true);
 
     try {
-      const conversationWithoutError = messages.filter((m) => m.id !== errorMessageId);
-      const response = await chatWithCelebrity(celebrity, [...conversationWithoutError, lastUserMsg], language);
+      const response = await chatWithCelebrity(celebrity, currentMessages, language);
       const assistantMessage: Message = {
         id: generateId(),
         role: "assistant",
@@ -370,7 +402,7 @@ export default function ChatPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [celebrity, isLoading, messages, language, t]);
+  }, [celebrity, isLoading, language, t]);
 
   const handleFeedback = useCallback((msgId: string, type: "like" | "dislike") => {
     setFeedbackMap((prev) => {
@@ -477,11 +509,14 @@ export default function ChatPage() {
       {/* Chat Area */}
       <div
         ref={chatAreaRef}
-        className="flex-1 overflow-y-auto page-transition"
-        style={{ height: "calc(var(--vh, 100vh) - 64px - 80px)" }}
+        className="flex-1 page-transition"
       >
-        <div ref={scrollRef} className="h-full overflow-y-auto custom-scrollbar">
-          <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="h-full overflow-y-auto custom-scrollbar"
+        >
+          <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
             <AnimatePresence initial={false}>
               {messages.map((msg) => (
                 <motion.div
@@ -500,55 +535,75 @@ export default function ChatPage() {
                       onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentCelebrity.name.en)}&background=c0392b&color=fff&size=64`; }}
                     />
                   )}
-                  <div className={cn("group relative", msg.role === "user" ? "bubble-user" : "bubble-ai")}>
-                    <div className="msg-content text-[13px] md:text-sm leading-[1.9] whitespace-pre-wrap">
-                      {typewritingMessages.current.has(msg.id) ? "" : msg.content}
-                    </div>
-                    {!typewritingMessages.current.has(msg.id) && !msg.isError && (
-                      <div className="absolute -bottom-7 left-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => handleCopy(msg.id, msg.content)}
-                          className="p-1 rounded-md hover:bg-ink-100"
-                          aria-label="Copy message"
-                        >
-                          {copiedId === msg.id ? (
-                            <Check className="w-3 h-3 text-green-500" />
-                          ) : (
-                            <Copy className="w-3 h-3 text-ink-300" />
-                          )}
-                        </button>
-                        {msg.role === "assistant" && (
-                          <>
-                            <button
-                              onClick={() => handleFeedback(msg.id, "like")}
-                              className={cn("p-1 rounded-md hover:bg-ink-100", feedbackMap[msg.id] === "like" && "text-vermilion")}
-                              aria-label="Like"
-                            >
-                              <ThumbsUp className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={() => handleFeedback(msg.id, "dislike")}
-                              className={cn("p-1 rounded-md hover:bg-ink-100", feedbackMap[msg.id] === "dislike" && "text-ink-400")}
-                              aria-label="Dislike"
-                            >
-                              <ThumbsDown className="w-3 h-3" />
-                            </button>
-                          </>
-                        )}
+                  <div className={cn("flex flex-col", msg.role === "user" ? "items-end" : "items-start")}>
+                    <div className={cn("group relative", msg.role === "user" ? "bubble-user" : "bubble-ai")}>
+                      <div className="msg-content text-[13px] md:text-sm leading-[1.9] whitespace-pre-wrap">
+                        {typewritingMessages.current.has(msg.id) ? "" : msg.content}
                       </div>
-                    )}
-                    {msg.isError && !isLoading && (
-                      <button
-                        onClick={() => handleRetry(msg.id)}
-                        className="mt-2 text-[11px] text-vermilion hover:text-vermilion-hover transition-colors font-medium"
-                      >
-                        ↻ {t("retry") || "重试"}
-                      </button>
+                      {!typewritingMessages.current.has(msg.id) && !msg.isError && (
+                        <div className="absolute -bottom-7 left-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleCopy(msg.id, msg.content)}
+                            className="p-1 rounded-md hover:bg-ink-100"
+                            aria-label={t("copy")}
+                          >
+                            {copiedId === msg.id ? (
+                              <Check className="w-3 h-3 text-green-500" />
+                            ) : (
+                              <Copy className="w-3 h-3 text-ink-300" />
+                            )}
+                          </button>
+                          {msg.role === "assistant" && (
+                            <>
+                              <button
+                                onClick={() => handleFeedback(msg.id, "like")}
+                                className={cn("p-1 rounded-md hover:bg-ink-100", feedbackMap[msg.id] === "like" && "text-vermilion")}
+                                aria-label={t("like")}
+                              >
+                                <ThumbsUp className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => handleFeedback(msg.id, "dislike")}
+                                className={cn("p-1 rounded-md hover:bg-ink-100", feedbackMap[msg.id] === "dislike" && "text-ink-400")}
+                                aria-label={t("dislike")}
+                              >
+                                <ThumbsDown className="w-3 h-3" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      {msg.isError && !isLoading && (
+                        <button
+                          onClick={() => handleRetry(msg.id)}
+                          className="mt-2 text-[11px] text-vermilion hover:text-vermilion-hover transition-colors font-medium"
+                        >
+                          ↻ {t("retry") || "重试"}
+                        </button>
+                      )}
+                    </div>
+                    {!typewritingMessages.current.has(msg.id) && (
+                      <span className="text-[9px] text-ink-300 mt-1 px-1">
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
                     )}
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
+
+            {/* Scroll-to-bottom button */}
+            {showScrollBtn && (
+              <button
+                onClick={scrollToBottom}
+                className="sticky bottom-3 left-1/2 -translate-x-1/2 z-10 w-9 h-9 rounded-full bg-white border border-border shadow-md flex items-center justify-center hover:bg-ink-50 transition-colors"
+                aria-label="滚动到底部"
+              >
+                <svg className="w-4 h-4 text-ink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="6,9 12,15 18,9" />
+                </svg>
+              </button>
+            )}
 
             {isLoading && (
               <div className="flex justify-start">
@@ -583,11 +638,7 @@ export default function ChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   handleSend();
                 }
@@ -607,6 +658,9 @@ export default function ChatPage() {
               <Send className="w-4 h-4" />
             </button>
           </div>
+          <p className="text-[10px] text-ink-300 text-center mt-1.5 hidden md:block">
+            {t("input_hint")}
+          </p>
         </div>
       </div>
       <ChatHistorySidebar

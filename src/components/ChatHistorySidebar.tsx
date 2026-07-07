@@ -166,15 +166,21 @@ export function updateConversationMeta(celebrityId: string, messages: { role: st
   const celeb = celebrities.find((c) => c.id === celebrityId);
   if (!celeb || messages.length === 0) return;
 
+  let currentLang: string = "zh";
+  try {
+    const profile = JSON.parse(localStorage.getItem("user_profile") || "{}");
+    if (profile.language) currentLang = profile.language;
+  } catch { /* ignore */ }
+
   const lastMsg = messages[messages.length - 1];
   const meta: ConversationMeta = {
     id: celebrityId,
     celebrityId,
-    celebrityName: celeb.name.zh,
+    celebrityName: celeb.name[currentLang as keyof typeof celeb.name] || celeb.name.zh,
     lastMessage: lastMsg.content.slice(0, 60),
     messageCount: messages.length,
     lastTimestamp: Date.now(),
-    lang: "zh",
+    lang: currentLang,
   };
 
   const convos = loadConversations();

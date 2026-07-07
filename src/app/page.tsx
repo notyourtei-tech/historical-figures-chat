@@ -111,7 +111,7 @@ export default function HomePage() {
         const bMbti = userProfile?.mbti ? mbtiCompatibility(userProfile.mbti, getCelebrityMbti(b.id) || "") : 0;
         return bMbti * 3 + bInterest - (aMbti * 3 + aInterest);
       });
-  }, [debouncedSearch, selectedCategory, language, userProfile]);
+  }, [debouncedSearch, selectedCategory, userProfile]);
 
   if (isClient && showOnboarding) {
     return (

@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "chat-message": "/components/chat-message/chat-message"
+  },
+  "navigationBarTitleText": "对话中..."
+}

@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "celebrity-card": "/components/celebrity-card/celebrity-card"
+  },
+  "navigationBarTitleText": "万古灵犀"
+}

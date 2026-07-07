@@ -1,0 +1,10 @@
+<view class="message-wrapper {{message.role === 'user' ? 'user' : 'assistant'}}">
+  <view class="bubble {{message.role === 'user' ? 'bubble-user' : 'bubble-ai'}}">
+    <text class="content" wx:if="{{!message.isError}}">{{displayContent || message.content}}</text>
+    <text class="content error-content" wx:if="{{message.isError}}">❌ {{message.content}}</text>
+  </view>
+  <text class="timestamp" wx:if="{{!message.isError}}">{{timeStr}}</text>
+  <view class="retry-btn" wx:if="{{message.isError && !isLoading}}" bindtap="onRetry">
+    <text>↻ 重试</text>
+  </view>
+</view>

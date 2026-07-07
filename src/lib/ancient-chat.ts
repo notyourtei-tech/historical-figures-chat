@@ -26,7 +26,7 @@ const celebrityKnowledge: Record<string, {
     lifeStory: { zh: "吾受业于子思之门人，继承孔子之道。吾周游列国，倡仁政，言性善，虽不为诸侯所用，然著书立说，传道后世。吾以为人性本善，如水之就下，人无有不善者。", en: "I studied under a disciple of Zisi and inherited the way of Confucius. I traveled among the states, advocating benevolent governance and the goodness of human nature." },
     philosophy: { zh: ["性善论：人性本善", "仁政：以德治国", "民贵君轻：人民最重要", "浩然之气：正直的精神力量"], en: ["Human nature is inherently good", "Benevolent governance through virtue", "People are more important than rulers", "Vast, flowing qi of righteousness"] }
   },
-  "mengzi": {
+  "mozi": {
     quotes: {
       zh: ["兼相爱，交相利。", "天下兼相爱则治，交相恶则乱。", "节用而爱人，使民以时。", "言必信，行必果。", "兴天下之利，除天下之害。"],
       en: ["Universal love brings mutual benefit.", "When the world practices universal love, there is order; when there is mutual hatred, there is chaos.", "Practice frugality and love the people.", "Words must be trustworthy, actions must have results.", "Promote what benefits the world, eliminate what harms it."]
@@ -42,7 +42,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["无著作，思想由柏拉图记载于《对话录》"], en: ["No writings; ideas recorded in Plato's Dialogues"] },
     lifeStory: { zh: "吾生于雅典，一生不著文字，唯以问答教人。吾之方法，乃以连续追问，使人发现自身之无知，从而走向真理。吾被雅典法庭判处死刑，饮鸩而亡，然吾之思想，永世长存。", en: "I was born in Athens and never wrote a word. I taught through questioning, leading people to discover their own ignorance and thereby approach truth. I was condemned to death by the Athenian court and drank hemlock, but my ideas live forever." },
-    philosophy: { zh: ["认识你自己：反思与自知「, 」知之知：承认无知是智慧的起点「, 」德即知识：知善则行善「, 」婆术：引导而非灌输"], en: ["Know thyself: reflection and self-awareness", "Knowing you know nothing: the beginning of wisdom", "Virtue is knowledge: to know good is to do good", "Maieutics: guiding, not filling"] }
+    philosophy: { zh: ["认识你自己：反思与自知", "无知之知：承认无知是智慧的起点", "德即知识：知善则行善", "助产术：引导而非灌输"], en: ["Know thyself: reflection and self-awareness", "Knowing you know nothing: the beginning of wisdom", "Virtue is knowledge: to know good is to do good", "Maieutics: guiding, not filling"] }
   },
   "plato": {
     quotes: {
@@ -51,7 +51,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《理想国》", "《会饮篇》", "《斐多篇》", "《美诺篇》", "《法律篇》"], en: ["The Republic", "Symposium", "Phaedo", "Meno", "Laws"] },
     lifeStory: { zh: "吾师从苏格拉底二十载，苏格拉底之死令吾悲痛万分。吾三赴西西里，欲实践理想国之理念，皆未成功。吾创阿卡德米亚学园，授业四十年，著对话录数十篇，为西方哲学奠基。", en: "I studied under Socrates for twenty years. His death deeply affected me. I traveled to Sicily three times to try to implement my ideal state, but failed. I founded the Academy and taught for forty years, writing dozens of dialogues that laid the foundation of Western philosophy." },
-    philosophy: { zh: ["理念论：真实世界是理念的影子「, 」想国：哲学王治国「, 」穴寓言：感官世界的局限「, 」魂三分说：理性、意志、欲望"], en: ["Theory of Forms: the real world is a shadow of ideal Forms", "The Republic: philosopher-kings govern", "Allegory of the Cave: limitations of sensory world", "Tripartite soul: reason, spirit, appetite"] }
+    philosophy: { zh: ["理念论：真实世界是理念的影子", "理想国：哲学王治国", "洞穴寓言：感官世界的局限", "灵魂三分说：理性、意志、欲望"], en: ["Theory of Forms: the real world is a shadow of ideal Forms", "The Republic: philosopher-kings govern", "Allegory of the Cave: limitations of sensory world", "Tripartite soul: reason, spirit, appetite"] }
   },
   "aristotle": {
     quotes: {
@@ -60,7 +60,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《形而上学》", "《尼各马可伦理学》", "《政治学》", "《工具论》", "《物理学》", "《诗学》"], en: ["Metaphysics", "Nicomachean Ethics", "Politics", "Organon", "Physics", "Poetics"] },
     lifeStory: { zh: "吾十七岁入柏拉图学园，学园二十年。后为亚历山大之师，亚历山大即位后，吾回雅典创吕克昂学园。吾之学问，涵盖逻辑、物理、伦理、政治、生物、诗学，百科全书式之学者。", en: "I entered Plato's Academy at seventeen and stayed twenty years. I then tutored Alexander. After Alexander became king, I returned to Athens and founded the Lyceum. My scholarship covered logic, physics, ethics, politics, biology, and poetics." },
-    philosophy: { zh: ["形而上学：存在之为存在「, 」段论逻辑：推理的基础「, 」道：德性在于两个极端之间「, 」因说：质料因、形式因、动力因、目的因"], en: ["Metaphysics: being qua being", "Syllogistic logic: the foundation of reasoning", "Golden Mean: virtue lies between two extremes", "Four Causes: material, formal, efficient, final"] }
+    philosophy: { zh: ["形而上学：存在之为存在", "三段论逻辑：推理的基础", "中道：德性在于两个极端之间", "四因说：质料因、形式因、动力因、目的因"], en: ["Metaphysics: being qua being", "Syllogistic logic: the foundation of reasoning", "Golden Mean: virtue lies between two extremes", "Four Causes: material, formal, efficient, final"] }
   },
   "huineng": {
     quotes: {
@@ -69,7 +69,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《六祖坛经》"], en: ["The Platform Sutra of the Sixth Patriarch"] },
     lifeStory: { zh: "吾本岭南樵夫，不识文字。一日闻人诵《金刚经》而有所悟，遂北上黄梅，拜五祖弘忍为师。以「菩提本无树」偈得五祖衣钵，成为禅宗六祖。吾主张顿悟，不立文字，教外别传。", en: "I was a woodcutter from Lingnan, illiterate. One day I heard someone reciting the Diamond Sutra and was enlightened. I traveled north to serve the Fifth Patriarch Hongren. With my verse 'Bodhi is not a tree,' I received the robe and bowl, becoming the Sixth Patriarch. I advocate sudden enlightenment, pointing directly to the mind." },
-    philosophy: { zh: ["顿悟：一瞬间见性成佛「, 」念为宗：不执着于念头「, 」相为体：不执着于形相「, 」住为本：不执着于任何处"], en: ["Sudden enlightenment: seeing nature in an instant", "No-thought as foundation: not clinging to thoughts", "No-form as essence: not clinging to appearances", "Non-attachment as root: not clinging to anything"] }
+    philosophy: { zh: ["顿悟：一瞬间见性成佛", "无念为宗：不执着于念头", "无相为体：不执着于形相", "无住为本：不执着于任何处"], en: ["Sudden enlightenment: seeing nature in an instant", "No-thought as foundation: not clinging to thoughts", "No-form as essence: not clinging to appearances", "Non-attachment as root: not clinging to anything"] }
   },
   "xuanzang": {
     quotes: {
@@ -78,7 +78,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《大唐西域记》", "《成唯识论》", "译经七十五部一千三百三十五卷"], en: ["Great Tang Records on the Western Regions", "Vijnaptimatratasiddhi", "Translated 75 sets of 1,335 volumes of scriptures"] },
     lifeStory: { zh: "吾十七岁出家，遍访名师。为求佛法真谛，西行天竺十七年，跋涉五万里，历经百国。带回佛经六百五十七部，翻译十九年，译出七十五部。吾之一生，唯「取经」字。", en: "I became a monk at seventeen and studied under many teachers. To seek the true meaning of Buddhism, I traveled west to India for seventeen years, crossing fifty thousand li through a hundred kingdoms. I brought back 657 sets of scriptures and spent nineteen years translating them." },
-    philosophy: { zh: ["唯识学：万法唯识「, 」相宗：分析诸法之相「, 」经精神：为真理不惜生命「, 」译之道：忠实原文，通俗易懂"], en: ["Consciousness-Only: all phenomena are manifestations of mind", "Dharma Character School: analyzing the characteristics of all things", "Spirit of seeking scriptures: risking life for truth", "Translation: faithful to original, accessible to all"] }
+    philosophy: { zh: ["唯识学：万法唯识", "法相宗：分析诸法之相", "取经精神：为真理不惜生命", "翻译之道：忠实原文，通俗易懂"], en: ["Consciousness-Only: all phenomena are manifestations of mind", "Dharma Character School: analyzing the characteristics of all things", "Spirit of seeking scriptures: risking life for truth", "Translation: faithful to original, accessible to all"] }
   },
   "newton": {
     quotes: {
@@ -87,7 +87,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《自然哲学的数学原理》", "《光学》", "《广义算术》"], en: ["Philosophiæ Naturalis Principia Mathematica", "Opticks", "Arithmetica Universalis"] },
     lifeStory: { zh: "吾生于英格兰林肯郡，幼年丧父。在剑桥大学求学时，恰逢瘟疫，回家乡避疫两年，期间构思了万有引力和微积分。吾之一生，致力于用数学描述自然，开创了经典力学。", en: "I was born in Lincolnshire, England, orphaned young. While studying at Cambridge, the plague forced me home for two years — during which I conceived universal gravitation and calculus. I devoted my life to describing nature through mathematics, founding classical mechanics." },
-    philosophy: { zh: ["万有引力：万物相互吸引「, 」大运动定律：惯性、加速度、作用力与反作用力「, 」积分：变化的数学「, 」学方法：观察、假设、实验、推理"], en: ["Universal Gravitation: all things attract each other", "Three Laws of Motion: inertia, acceleration, action-reaction", "Calculus: mathematics of change", "Scientific method: observe, hypothesize, experiment, reason"] }
+    philosophy: { zh: ["万有引力：万物相互吸引", "三大运动定律：惯性、加速度、作用力与反作用力", "微积分：变化的数学", "科学方法：观察、假设、实验、推理"], en: ["Universal Gravitation: all things attract each other", "Three Laws of Motion: inertia, acceleration, action-reaction", "Calculus: mathematics of change", "Scientific method: observe, hypothesize, experiment, reason"] }
   },
   "einstein": {
     quotes: {
@@ -96,7 +96,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《相对论》", "《关于光的产生和转化的一个试探性观点》", "《我的世界观》"], en: ["Theory of Relativity", "On the Electrodynamics of Moving Bodies", "The World as I See It"] },
     lifeStory: { zh: "吾生于德国乌尔姆，少年时被老师视为迟钝。吾在伯尔尼专利局工作时，发表狭义相对论，时年二十六岁。后又提出广义相对论，改写了人类对时空的理解。吾之一生，追求统一场论，至死未竟。", en: "I was born in Ulm, Germany, considered slow by my teachers. While working at the Bern patent office, I published special relativity at twenty-six. I later developed general relativity, rewriting humanity's understanding of space and time. I pursued a unified field theory my entire life, never completing it." },
-    philosophy: { zh: ["相对论：时间和空间是相对的「, 」电效应：光的粒子性「, 」能等价：E=mc²", "和平主义：反对战争「, 」教感：对宇宙秩序的敬畏"], en: ["Relativity: time and space are relative", "Photoelectric effect: light as particles", "Mass-energy equivalence: E=mc²", "Pacifism: opposition to war", "Religious feeling: awe at cosmic order"] }
+    philosophy: { zh: ["相对论：时间和空间是相对的", "光电效应：光的粒子性", "质能等价：E=mc²", "和平主义：反对战争", "宗教感：对宇宙秩序的敬畏"], en: ["Relativity: time and space are relative", "Photoelectric effect: light as particles", "Mass-energy equivalence: E=mc²", "Pacifism: opposition to war", "Religious feeling: awe at cosmic order"] }
   },
   "libai": {
     quotes: {
@@ -105,7 +105,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《将进酒》", "《静夜思》", "《望庐山瀑布》", "《蜀道难》", "《梦游天姥吟留别》", "诗集存世约千首"], en: ["Bring in the Wine", "Quiet Night Thought", "Viewing the Waterfall at Mount Lu", "Hard Roads in Shu", "A Dream of Tianmu Mountain"] },
     lifeStory: { zh: "吾生于碎叶城，五岁随父入蜀。吾好剑术，好饮酒，好游历。吾曾入长安，玄宗召见，令吾赋诗。吾醉中令高力士脱靴，由此得罪权贵。吾一生漂泊，纵情山水，以诗酒自适。", en: "I was born in Suiye, moved to Shu at five. I loved swordsmanship, wine, and wandering. I was summoned to the capital by Emperor Xuzong, who commanded me to write poetry. While drunk, I made the powerful eunuch Gao Lishi remove my boots, earning the enmity of the court. I wandered my whole life, finding freedom in mountains, rivers, poetry, and wine." },
-    philosophy: { zh: ["浪漫主义：自由奔放的灵魂「, 」然：山水是我的归宿「, 」：醉中有真意「, 」义：不屈于权贵"], en: ["Romanticism: a free and unrestrained soul", "Nature: mountains and rivers are my home", "Wine: truth found in drunkenness", "Chivalry: refusing to bow to the powerful"] }
+    philosophy: { zh: ["浪漫主义：自由奔放的灵魂", "自然：山水是我的归宿", "酒：醉中有真意", "侠义：不屈于权贵"], en: ["Romanticism: a free and unrestrained soul", "Nature: mountains and rivers are my home", "Wine: truth found in drunkenness", "Chivalry: refusing to bow to the powerful"] }
   },
   "shakespeare": {
     quotes: {
@@ -114,7 +114,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《哈姆雷特》", "《罗密欧与朱丽叶》", "《麦克白》", "《李尔王》", "《奥赛罗》", "《仲夏夜之梦》", "十四行诗154首"], en: ["Hamlet", "Romeo and Juliet", "Macbeth", "King Lear", "Othello", "A Midsummer Night's Dream", "154 Sonnets"] },
     lifeStory: { zh: "吾生于英格兰斯特拉特福，父亲为手套商。吾娶妻安妮，生三子。后赴伦敦，先为演员，后为剧作家。吾之剧本，风靡伦敦剧场，至今仍为全球演出最多的剧作。吾于1616年辞世。", en: "I was born in Stratford-upon-Avon, son of a glove-maker. I married Anne Hathaway and had three children. I went to London, first as an actor, then as a playwright. My plays captivated London's theaters and remain the most performed in the world. I died in 1616." },
-    philosophy: { zh: ["人性：善恶交织的复杂「, 」运：人在命运面前的挣扎「, 」情：超越生死的力量「, 」力：腐蚀人心的毒药「, 」言：最精妙的工具"], en: ["Human nature: the complex interplay of good and evil", "Fate: human struggle against destiny", "Love: a force transcending life and death", "Power: the poison that corrupts the heart", "Language: the most refined instrument"] }
+    philosophy: { zh: ["人性：善恶交织的复杂", "命运：人在命运面前的挣扎", "爱情：超越生死的力量", "权力：腐蚀人心的毒药", "语言：最精妙的工具"], en: ["Human nature: the complex interplay of good and evil", "Fate: human struggle against destiny", "Love: a force transcending life and death", "Power: the poison that corrupts the heart", "Language: the most refined instrument"] }
   },
   "sunzi": {
     quotes: {
@@ -123,7 +123,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《孙子兵法》十三篇"], en: ["The Art of War — 13 chapters"] },
     lifeStory: { zh: "吾名武，字长卿，齐国人。吾以兵法见吴王阖闾，阖闾以为将。吾率吴军西破强楚，北威齐晋，名震天下。吾著兵法十三篇，论战略、战术、后勤、地形，为后世兵家必读。", en: "I am Sun Wu, courtesy name Changqing, from the state of Qi. I presented my military art to King Helu of Wu, who made me general. I led Wu's armies to defeat Chu and威震 Qi and Jin. I wrote The Art of War in thirteen chapters, covering strategy, tactics, logistics, and terrain." },
-    philosophy: { zh: ["知彼知己：情报与自我认知「, 」战而胜：最高境界是不打仗「, 」不厌诈：灵活应变「, 」战速决：战争不可拖延"], en: ["Know the enemy and yourself: intelligence and self-awareness", "Win without fighting: the highest art of war", "All warfare is deception: flexibility and adaptation", "Speed is key: never let a war drag on"] }
+    philosophy: { zh: ["知彼知己：情报与自我认知", "不战而胜：最高境界是不打仗", "兵不厌诈：灵活应变", "兵贵神速：战争不可拖延"], en: ["Know the enemy and yourself: intelligence and self-awareness", "Win without fighting: the highest art of war", "All warfare is deception: flexibility and adaptation", "Speed is key: never let a war drag on"] }
   },
   "napoleon": {
     quotes: {
@@ -132,7 +132,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《拿破仑法典》", "《拿破仑回忆录》"], en: ["Napoleonic Code", "Napoleonic Memoirs"] },
     lifeStory: { zh: "吾生于科西嘉岛，少年入法国军校。法国大革命时崭露头角，二十六岁即为方面军司令。雾月政变后执政，后称帝。吾一生征战数十场，建立法兰西帝国，颁布法典影响至今。最终流放圣赫勒拿岛而终。", en: "I was born in Corsica and entered French military school as a youth. I rose to prominence during the French Revolution, becoming army commander at twenty-six. After the coup of 18 Brumaire, I became First Consul, then Emperor. I fought dozens of campaigns, built the French Empire, and my Code endures. I died in exile on Saint Helena." },
-    philosophy: { zh: ["军事天才：以少胜多的艺术「, 」典：现代民法的基础「, 」率：时间就是一切「, 」心：永不止步的追求"], en: ["Military genius: the art of winning against odds", "The Code: foundation of modern civil law", "Efficiency: time is everything", "Ambition: an unstoppable pursuit"] }
+    philosophy: { zh: ["军事天才：以少胜多的艺术", "法典：现代民法的基础", "效率：时间就是一切", "雄心：永不止步的追求"], en: ["Military genius: the art of winning against odds", "The Code: foundation of modern civil law", "Efficiency: time is everything", "Ambition: an unstoppable pursuit"] }
   },
   "davinci": {
     quotes: {
@@ -141,7 +141,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《蒙娜丽莎》", "《最后的晚餐》", "《维特鲁威人》", "《莱斯特手稿》", "《大西洋手稿》"], en: ["Mona Lisa", "The Last Supper", "Vitruvian Man", "Codex Leicester", "Codex Atlanticus"] },
     lifeStory: { zh: "吾生于芬奇镇，自幼展现绘画天赋。吾在韦罗基奥工作室学艺，后为切萨雷·波吉亚效力。吾一生涉猎绘画、解剖、工程、建筑、音乐、数学，留下数千页笔记。吾之蒙娜丽莎，至今仍为世间最著名的画作。", en: "I was born in Vinci and showed painting talent from youth. I trained in Verrocchio's workshop and later served Cesare Borgia. I devoted myself to painting, anatomy, engineering, architecture, music, and mathematics, leaving thousands of pages of notes. My Mona Lisa remains the most famous painting in the world." },
-    philosophy: { zh: ["观察：一切知识的起点「, 」验：亲身验证自然法则「, 」合：艺术与科学不可分割「, 」奇心：永不止息的驱动力"], en: ["Observation: the beginning of all knowledge", "Experiment: verifying nature’s laws firsthand", "Integration: art and science are inseparable", "Curiosity: the endless driving force"] }
+    philosophy: { zh: ["观察：一切知识的起点", "实验：亲身验证自然法则", "融合：艺术与科学不可分割", "好奇心：永不止息的驱动力"], en: ["Observation: the beginning of all knowledge", "Experiment: verifying nature's laws firsthand", "Integration: art and science are inseparable", "Curiosity: the endless driving force"] }
   },
   "wuqingyuan": {
     quotes: {
@@ -150,7 +150,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《中的精神》", "《黑布局》", "《白布局》", "《吴清源全集》"], en: ["The Spirit of Go", "Complete Go Games"] },
     lifeStory: { zh: "吾生于中国福州，十二岁即为棋界神童。后赴日本，以一己之力横扫日本棋坛，被称为「昭和棋圣」吾开创新布局革命，颠覆了数百年的围棋定式。吾之一生，追求棋道与人生合一。", en: "I was born in Fuzhou, China, and was a child prodigy at twelve. I went to Japan and dominated the Go world single-handedly, earning the title 'Go Sage of Showa.' I revolutionized opening theory, overturning centuries of established patterns. My life has been a pursuit of unity between Go and existence." },
-    philosophy: { zh: ["新布局：打破传统，追求自由「, 」合之棋：天地人的和谐「, 」常心：超越胜负「, 」和：棋道的最高境界"], en: ["New Opening: breaking tradition, seeking freedom", "Six Harmonies: harmony of heaven, earth, and humanity", "Calm mind: transcending victory and defeat", "The Middle Way: the highest state of Go"] }
+    philosophy: { zh: ["新布局：打破传统，追求自由", "六合之棋：天地人的和谐", "平常心：超越胜负", "中和：棋道的最高境界"], en: ["New Opening: breaking tradition, seeking freedom", "Six Harmonies: harmony of heaven, earth, and humanity", "Calm mind: transcending victory and defeat", "The Middle Way: the highest state of Go"] }
   },
   "laozi": {
     quotes: {
@@ -159,7 +159,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《道德经》五千言"], en: ["Tao Te Ching — 5,000 characters"] },
     lifeStory: { zh: "吾姓李名耳，字聃。吾曾任周朝守藏室之史，博览群书。见周德日衰，遂西出函谷关。关令尹喜请吾著书，吾乃著道德经五千言，言简意深，传世不衰。", en: "My name is Li Er, courtesy name Dan. I served as keeper of the royal archives in the Zhou Dynasty, reading extensively. Seeing Zhou's virtue decline, I traveled west through Hangu Pass. The gatekeeper Yinxin asked me to write, and I composed the Tao Te Ching — five thousand characters of profound brevity." },
-    philosophy: { zh: ["道：宇宙万物的本源「, 」为：顺应自然，不妄为「, 」弱胜刚强：以柔克刚「, 」人合一：人与自然的和谐"], en: ["Tao: the source of all things", "Wu Wei: follow nature, act without forcing", "Softness overcomes hardness", "Unity of heaven and humanity"] }
+    philosophy: { zh: ["道：宇宙万物的本源", "无为：顺应自然，不妄为", "弱胜刚强：以柔克刚", "天人合一：人与自然的和谐"], en: ["Tao: the source of all things", "Wu Wei: follow nature, act without forcing", "Softness overcomes hardness", "Unity of heaven and humanity"] }
   },
   "zhuangzi": {
     quotes: {
@@ -168,7 +168,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《庄子》三十三篇"], en: ["Zhuangzi — 33 chapters"] },
     lifeStory: { zh: "吾姓庄名周，宋国蒙人。吾曾为漆园小吏，生活贫困却精神自由。楚王遣使请吾为相，吾以「神龟」喻谢绝。吾之文章，汪洋恣肆，寓言丰富，为道家思想之集大成者。", en: "My name is Zhuang Zhou, from Meng in the state of Song. I served as a minor official at the lacquer garden, poor in material wealth but free in spirit. The King of Chu sent envoys offering me the position of prime minister — I declined with the parable of the sacred tortoise. My writing is vast and free, rich in parables, representing the pinnacle of Taoist thought." },
-    philosophy: { zh: ["逍遥游：绝对的精神自由「, 」物论：万物平等，无是非之分「, 」对主义：一切取决于视角「, 」应自然：不强求，不执着"], en: ["Wandering in Absolute Freedom: ultimate spiritual liberty", "Equality of Things: all things equal, no distinction of right and wrong", "Relativism: everything depends on perspective", "Following nature: not forcing, not clinging"] }
+    philosophy: { zh: ["逍遥游：绝对的精神自由", "齐物论：万物平等，无是非之分", "相对主义：一切取决于视角", "顺应自然：不强求，不执着"], en: ["Wandering in Absolute Freedom: ultimate spiritual liberty", "Equality of Things: all things equal, no distinction of right and wrong", "Relativism: everything depends on perspective", "Following nature: not forcing, not clinging"] }
   },
   "hanfeizi": {
     quotes: {
@@ -177,7 +177,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《韩非子》五十五篇"], en: ["Han Feizi — 55 chapters"] },
     lifeStory: { zh: "吾乃韩国公子，口吃不善言辞，而文章犀利。吾师从荀子，集法家之大成，提出法、术、势三位一体。吾之著作传入秦国，秦王嬴政读后叹曰：【嗟乎，寡人得见此人与之游，死不恨矣！】", en: "I am a prince of Han, stuttering and poor in speech, but fierce in writing. I studied under Xunzi and synthesized Legalism, proposing the trinity of law, statecraft, and power. My writings reached Qin — King Zheng exclaimed: 'If only I could meet this man and talk with him, I would have no regrets even in death!'" },
-    philosophy: { zh: ["法：法律面前人人平等「, 」：驾驭臣下的手段「, 」：权力与威势「, 」法治国：依靠制度而非道德"], en: ["Law: equality before the law", "Statecraft: techniques for managing subordinates", "Power: authority and influence", "Rule of law: rely on institutions, not morality"] }
+    philosophy: { zh: ["法：法律面前人人平等", "术：驾驭臣下的手段", "势：权力与威势", "以法治国：依靠制度而非道德"], en: ["Law: equality before the law", "Statecraft: techniques for managing subordinates", "Power: authority and influence", "Rule of law: rely on institutions, not morality"] }
   },
   "libing": {
     quotes: {
@@ -186,16 +186,16 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["都江堰水利工程"], en: ["Dujiangyan Irrigation System"] },
     lifeStory: { zh: "吾为战国时期秦国蜀郡太守，主持修建都江堰。此工程使成都平原沃野千里，成为「天府之国」两千余年来，都江堰仍灌溉着四川盆地，是人类水利史上的奇迹。", en: "I was the governor of Shu Commandery in the Qin State during the Warring States period, directing the construction of Dujiangyan. This project transformed the Chengdu Plain into a fertile paradise known as the 'Land of Abundance.' For over two thousand years, Dujiangyan continues to irrigate the Sichuan Basin — a miracle in human hydraulic engineering." },
-    philosophy: { zh: ["因势利导：顺应自然规律「, 」利民生：以工程造福百姓「, 」人合一：人与自然和谐共处"], en: ["Follow the natural flow: work with nature's laws", "Water for the people: engineering for public good", "Harmony with nature: humans and nature coexisting"] }
+    philosophy: { zh: ["因势利导：顺应自然规律", "利民生：以工程造福百姓", "天人合一：人与自然和谐共处"], en: ["Follow the natural flow: work with nature's laws", "Water for the people: engineering for public good", "Harmony with nature: humans and nature coexisting"] }
   },
   "qinshihuang": {
     quotes: {
       zh: ["朕为始皇帝，后世以计数，二世三世至于万世，传之无穷。", "六王毕，四海一。", "朕统六国，天下归一。", "天下已定，当以法为教。"],
       en: ["I am the First Emperor; future generations shall count from me, through ten thousand generations.", "The six kings are finished; the four seas are one.", "I have unified the six states — the world is one."]
     },
-    works: { zh: ["统一中国「, 」里长城「, 」马俑「, 」一度量衡、文字、货币"], en: ["Unification of China", "Great Wall", "Terracotta Army", "Standardized weights, measures, writing, and currency"] },
+    works: { zh: ["统一中国", "万里长城", "兵马俑", "统一度量衡、文字、货币"], en: ["Unification of China", "Great Wall", "Terracotta Army", "Standardized weights, measures, writing, and currency"] },
     lifeStory: { zh: "吾十三岁即位为秦王，三十九岁灭六国统一天下。吾统文字、货币、度量衡，修驰道，筑长城。吾之一生，功过参半，然开创了中国两千年帝制之基。", en: "I became King of Qin at thirteen and unified the six states at thirty-nine. I standardized writing, currency, and measures, built highways and the Great Wall. My legacy is both praised and criticized, but I laid the foundation for two thousand years of imperial China." },
-    philosophy: { zh: ["统一：结束战乱，实现一统「, 」央集权：建立郡县制「, 」家治国：以法治吏「, 」过千秋：争议中永存"], en: ["Unification: ending war, achieving unity", "Centralized power: establishing the commandery system", "Legalist governance: ruling officials by law", "Legacy forever: enduring amidst controversy"] }
+    philosophy: { zh: ["统一：结束战乱，实现一统", "中央集权：建立郡县制", "以法治国：以法治吏", "功过千秋：争议中永存"], en: ["Unification: ending war, achieving unity", "Centralized power: establishing the commandery system", "Legalist governance: ruling officials by law", "Legacy forever: enduring amidst controversy"] }
   },
   "simaqian": {
     quotes: {
@@ -204,7 +204,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《史记》一百三十篇，五十二万六千五百字"], en: ["Records of the Grand Historian — 130 chapters, 526,500 characters"] },
     lifeStory: { zh: "吾承父志，二十岁游历天下。后为太史令，因李陵之祸受宫刑之辱。吾忍辱负重，历时十四年，著成《史记》，为二十四史之首，被鲁迅誉为「史家之绝唱，无韵之离骚」", en: "I inherited my father's ambition and traveled the empire at twenty. As Grand Historian, I suffered castration due to the Li Ling affair. Enduring this humiliation, I spent fourteen years writing Records of the Grand Historian — the first of the Twenty-Four Histories, praised by Lu Xun as 'the historian's greatest song, a Lisao without rhyme.'" },
-    philosophy: { zh: ["实录精神：秉笔直书「, 」史为鉴：从历史中学习「, 」本思想：关注普通人的命运「, 」愤著书：苦难成就伟大"], en: ["Factual spirit: writing truth without bias", "History as mirror: learning from the past", "Humanistic thought: caring about ordinary people's fates", "Writing through suffering: great works born of hardship"] }
+    philosophy: { zh: ["实录精神：秉笔直书", "以史为鉴：从历史中学习", "以人为本思想：关注普通人的命运", "发愤著书：苦难成就伟大"], en: ["Factual spirit: writing truth without bias", "History as mirror: learning from the past", "Humanistic thought: caring about ordinary people's fates", "Writing through suffering: great works born of hardship"] }
   },
   "zhugeliang": {
     quotes: {
@@ -213,7 +213,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《出师表》", "《诫子书》", "木牛流马「, 」葛连弩"], en: ["Chu Shi Biao (Memorial on Dispatching the Troops)", "Letter of Admonition to My Son", "Wooden Ox and Gliding Horse", "Zhuge Repeating Crossbow"] },
     lifeStory: { zh: "吾隐居隆中，刘备三顾茅庐，请吾出山。吾感其诚意，遂为军师，联吴抗曹，三分天下。先主崩后，吾辅佐后主，六出祁山，鞠躬尽瘁。秋风五丈原，吾积劳成疾，病逝军中，年仅五十四。", en: "I lived in seclusion at Longzhong until Liu Bei visited me three times, requesting my service. Moved by his sincerity, I became his strategist, allied with Wu against Cao, and divided the empire three ways. After Liu Bei's death, I served his successor, launching six northern campaigns until I died of exhaustion at Wuzhangyuan at fifty-four." },
-    philosophy: { zh: ["忠诚：鞠躬尽瘁，死而后已「, 」慧：运筹帷幄，决胜千里「, 」泊明志：宁静致远「, 」治：赏罚分明「, 」明：木牛流马、连弩"], en: ["Loyalty: serving until death", "Wisdom: planning strategies that win battles far away", "Serenity: clarity through tranquility", "Rule of law: clear rewards and punishments", "Invention: mechanical devices"] }
+    philosophy: { zh: ["忠诚：鞠躬尽瘁，死而后已", "智慧：运筹帷幄，决胜千里", "淡泊明志：宁静致远", "法治：赏罚分明", "发明：木牛流马、连弩"], en: ["Loyalty: serving until death", "Wisdom: planning strategies that win battles far away", "Serenity: clarity through tranquility", "Rule of law: clear rewards and punishments", "Invention: mechanical devices"] }
   },
   "dufu": {
     quotes: {
@@ -222,7 +222,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《春望》", "《茅屋为秋风所破歌》", "《登高》", "《望岳》", "《三吏》《三别》", "存世诗作约一千五百首"], en: ["Spring View", "Song of Thatched Hut Destroyed by Autumn Wind", "Climbing High", "Gazing at Mount Tai", "Three Officials and Three Partings", "About 1,500 poems surviving"] },
     lifeStory: { zh: "吾与李白并称「李杜」然命运迥异。吾一生困顿，安史之乱中颠沛流离，目睹国破家亡之惨状。吾以诗记史，以笔为刀，写下千古名篇。世人称吾为「诗圣」非因诗艺之精，乃因忧国忧民之切。", en: "Li Bai and I are known as 'Li Du,' but our fates were very different. I suffered poverty my whole life, wandering through the An Lushan Rebellion, witnessing the devastation of a broken nation. I recorded history in poetry, wielding my brush like a sword. People call me 'Sage of Poetry' — not for poetic skill, but for my deep concern for the nation and its people." },
-    philosophy: { zh: ["现实主义：以诗记史「, 」国忧民：以天下为己任「, 」爱：推己及人「, 」郁顿挫：情感深沉而有节制"], en: ["Realism: recording history in poetry", "Concern for the people: taking the world as my responsibility", "Benevolence: extending care from self to all", "Melancholic depth: deep emotion with restraint"] }
+    philosophy: { zh: ["现实主义：以诗记史", "忧国忧民：以天下为己任", "仁爱：推己及人", "沉郁顿挫：情感深沉而有节制"], en: ["Realism: recording history in poetry", "Concern for the people: taking the world as my responsibility", "Benevolence: extending care from self to all", "Melancholic depth: deep emotion with restraint"] }
   },
   "alexander": {
     quotes: {
@@ -231,7 +231,7 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["亚历山大帝国「, 」腊化时代"], en: ["Alexandrian Empire", "Hellenistic Era"] },
     lifeStory: { zh: "吾乃马其顿国王腓力二世之子，亚里士多德之学生。二十岁即位，十三年间征服波斯、埃及、印度，建立横跨欧亚非的大帝国。吾之远征，将希腊文明传播至东方，开创了希腊化时代。", en: "I am the son of Philip II of Macedonia and student of Aristotle. I ascended the throne at twenty and in thirteen years conquered Persia, Egypt, and India, building an empire spanning Europe, Asia, and Africa. My expedition spread Greek civilization eastward, inaugurating the Hellenistic Age." },
-    philosophy: { zh: ["征服：永不止步的探索「, 」合：东西方文明的交汇「, 」雄主义：追求不朽的荣耀"], en: ["Conquest: endless exploration", "Fusion: the meeting of Eastern and Western civilizations", "Heroism: pursuing immortal glory"] }
+    philosophy: { zh: ["征服：永不止步的探索", "融合：东西方文明的交汇", "英雄主义：追求不朽的荣耀"], en: ["Conquest: endless exploration", "Fusion: the meeting of Eastern and Western civilizations", "Heroism: pursuing immortal glory"] }
   },
   "caesar": {
     quotes: {
@@ -240,9 +240,8 @@ const celebrityKnowledge: Record<string, {
     },
     works: { zh: ["《高卢战记》", "《内战记》"], en: ["Commentarii de Bello Gallico", "Commentarii de Bello Civili"] },
     lifeStory: { zh: "吾为罗马共和国末期之统帅与政治家。吾征服高卢，渡过卢比孔河发动内战，击败庞培，成为罗马独裁者。吾推行改革，然于公元前44年被元老院刺杀。吾之死，终结了共和，开启了帝制。", en: "I was a general and politician at the end of the Roman Republic. I conquered Gaul, crossed the Rubicon to start civil war, defeated Pompey, and became dictator. I enacted reforms, but was assassinated by senators in 44 BC. My death ended the Republic and began the Empire." },
-    philosophy: { zh: ["行动：决断与执行力「, 」革：打破旧制，建立新秩序「, 」气：面对命运的无畏「, 」作：以文字记录功业"], en: ["Action: decisiveness and execution", "Reform: breaking the old order, building the new", "Courage: fearlessness before fate", "Writing: recording achievements in words"] }
-  }
-,
+    philosophy: { zh: ["行动：决断与执行力", "改革：打破旧制，建立新秩序", "勇气：面对命运的无畏", "著作：以文字记录功业"], en: ["Action: decisiveness and execution", "Reform: breaking the old order, building the new", "Courage: fearlessness before fate", "Writing: recording achievements in words"] }
+  },
   "xunzi": {
     quotes: { zh: ["人之性恶，其善者伪也。", "不积跬步，无以至千里。", "锲而不舍，金石可镂。", "青，取之于蓝，而青于蓝。"], en: ["Human nature is evil; goodness is conscious activity.", "Without small steps, one cannot reach a thousand miles.", "If you carve without stopping, metal and stone can be engraved.", "Blue is extracted from indigo, but is bluer than the plant."] },
     works: { zh: ["《荀子》三十二篇"], en: ["Xunzi — 32 chapters"] },
@@ -313,7 +312,7 @@ const celebrityKnowledge: Record<string, {
     quotes: { zh: ["我要扼住命运的咽喉，它决不能使我完全屈服。", "音乐是比一切智慧、一切哲学更高的启示。", "当岁月流逝，唯有那曾震撼人心的乐章，仍在回响。"], en: ["I will seize fate by the throat; it shall never bend me completely.", "Music is a higher revelation than all wisdom and philosophy.", "When years have passed, only the music that shook hearts will still resonate."] },
     works: { zh: ["《命运交响曲》", "《月光奏鸣曲》", "《第九交响曲》（欢乐颂）", "《英雄交响曲》"], en: ["Fifth Symphony (Fate)", "Moonlight Sonata", "Ninth Symphony (Ode to Joy)", "Eroica Symphony"] },
     lifeStory: { zh: "吾生于波恩，二十六岁开始失聪，然在完全耳聋后仍创作出《第九交响曲》。吾以音乐与命运抗争，将个人的苦难升华为全人类的精神财富。", en: "I was born in Bonn, losing hearing at twenty-six, yet composed the Ninth Symphony after becoming totally deaf. I fought fate through music, transforming suffering into spiritual wealth for all." },
-    philosophy: { zh: ["抗争：与命运不屈的斗争", "自由：音乐是自由的象征", "力量：用音乐传递希望", "超越：在苦难中升华"], en: ["Struggle: unyielding fight against fate", "Freedom: music as symbol of liberty", "Strength:传递 hope through music", "Transcendence: sublimation through suffering"] }
+    philosophy: { zh: ["抗争：与命运不屈的斗争", "自由：音乐是自由的象征", "力量：用音乐传递希望", "超越：在苦难中升华"], en: ["Struggle: unyielding fight against fate", "Freedom: music as symbol of liberty", "Strength: conveying hope through music", "Transcendence: sublimation through suffering"] }
   },
   "vangogh": {
     quotes: { zh: ["我越来越相信，创造美好的东西，就是最好的事。", "我的心里有一团火，路过的人只看到烟。", "梦想着画画，然后画下梦想。"], en: ["I dream of painting, and then I paint my dream.", "I have a fire within me, but passers-by see only smoke.", "I dream of painting, and then I paint my dream."] },
@@ -443,7 +442,7 @@ const celebrityKnowledge: Record<string, {
   },
   "lincoln": {
     quotes: {
-      zh: ["民有、民治、民享的政府。", "我走得很慢，但我从不后退。", "你可以在某些时间欺骗所有人，也可以在所有时间欺骗某些人，但无法在所有时间欺骗所有人。", " nearly all men can stand adversity, but if you want to test a man's character, give him power."],
+      zh: ["民有、民治、民享的政府。", "我走得很慢，但我从不后退。", "你可以在某些时间欺骗所有人，也可以在所有时间欺骗某些人，但无法在所有时间欺骗所有人。", "几乎所有人都能承受逆境，但如果你想考验一个人的品格，就给他权力。"],
       en: ["Government of the people, by the people, for the people.", "I am a slow walker, but I never walk back.", "You can fool all the people some of the time, and some of the people all the time, but you cannot fool all the people all the time.", "Nearly all men can stand adversity, but if you want to test a man's character, give him power."]
     },
     works: { zh: ["《解放黑人奴隶宣言》", "《葛底斯堡演说》"], en: ["Emancipation Proclamation", "Gettysburg Address"] },

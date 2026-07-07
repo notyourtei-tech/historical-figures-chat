@@ -140,7 +140,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
                 <User className="text-white w-6 h-6" />
               </div>
               <h2 className="text-xl font-bold text-ink-500 mb-2">{t("name_label")}</h2>
-              <p className="text-sm text-ink-400">{t("onboarding_subtitle")}</p>
+              <p className="text-sm text-ink-400">{t("name_subtitle")}</p>
             </div>
 
             <input

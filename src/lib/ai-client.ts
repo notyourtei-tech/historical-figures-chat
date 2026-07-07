@@ -22,10 +22,6 @@ function isValidKey(key?: string): key is string {
   return !!key && !PLACEHOLDER_KEYS.has(key.trim());
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 interface ProviderSpec {
   name: string;
   apiKey: string;

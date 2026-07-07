@@ -1,4 +1,5 @@
-import { appendFileSync, readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { appendFile } from "fs/promises";
 import { join } from "path";
 
 type SecurityEvent = {
@@ -24,7 +25,7 @@ function ensureLogDir() {
 function persistToFile(entry: SecurityEvent) {
   try {
     ensureLogDir();
-    appendFileSync(LOG_FILE, JSON.stringify(entry) + "\n", "utf-8");
+    appendFile(LOG_FILE, JSON.stringify(entry) + "\n", "utf-8").catch(() => {});
   } catch {
     // File write failed, in-memory buffer is the fallback
   }

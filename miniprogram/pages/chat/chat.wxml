@@ -1,0 +1,85 @@
+<wxs module="i18n" src="../../utils/i18n.wxs"></wxs>
+<view class="page">
+  <!-- 顶部信息栏 -->
+  <view class="top-bar" wx:if="{{celebrity}}">
+    <view class="top-bar-left">
+      <image class="top-avatar" src="{{celebrity.avatar}}" mode="aspectFill" />
+      <view class="top-info">
+        <text class="top-name">{{celebrity.name[language]}}</text>
+        <text class="top-title">{{celebrity.title[language]}}</text>
+      </view>
+    </view>
+    <view class="top-bar-right">
+      <view class="top-btn" bindtap="toggleMenu">
+        <text>⋯</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 菜单 -->
+  <view class="menu-dropdown" wx:if="{{showMenu}}">
+    <view class="menu-item" bindtap="clearChat">{{i18n.t(language, 'clear_chat')}}</view>
+  </view>
+  <view class="overlay" wx:if="{{showMenu}}" bindtap="toggleMenu"></view>
+
+  <!-- 消息列表 -->
+  <scroll-view
+    class="messages"
+    scroll-y
+    scroll-into-view="{{scrollIntoView}}"
+    scroll-with-animation
+    enhanced
+    show-scrollbar="{{false}}"
+    bindscroll="onScroll"
+  >
+    <view class="messages-inner">
+      <chat-message
+        wx:for="{{messages}}"
+        wx:key="id"
+        id="msg-{{item.id}}"
+        message="{{item}}"
+        isLoading="{{isLoading}}"
+        bind:retry="onRetry"
+      />
+
+      <!-- 加载中 -->
+      <view class="loading-indicator" wx:if="{{isLoading}}">
+        <view class="typing-dots">
+          <view class="dot"></view>
+          <view class="dot"></view>
+          <view class="dot"></view>
+        </view>
+        <text class="loading-text">{{i18n.t(language, 'loading')}}</text>
+      </view>
+
+      <!-- 滚动到底部按钮 -->
+      <view class="scroll-bottom-btn" wx:if="{{showScrollBtn}}" bindtap="scrollToBottom">
+        <text>↓</text>
+      </view>
+
+      <view id="bottom-anchor" style="height: 1rpx;"></view>
+    </view>
+  </scroll-view>
+
+  <!-- 输入栏 -->
+  <view class="input-bar safe-area-bottom">
+    <view class="input-inner">
+      <textarea
+        class="chat-input"
+        value="{{inputValue}}"
+        placeholder="{{i18n.t(language, 'input_placeholder')}}"
+        bindinput="onInput"
+        bindconfirm="onSend"
+        auto-height
+        maxlength="2000"
+        fixed
+        cursor-spacing="12"
+        show-confirm-bar="{{false}}"
+        adjust-position="{{true}}"
+      />
+      <view class="send-btn {{canSend ? 'active' : ''}}" bindtap="onSend">
+        <text>↑</text>
+      </view>
+    </view>
+  </view>
+</view>

@@ -16,7 +16,7 @@ const cspHeader = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' https://api.dicebear.com https://www.transparenttextures.com https://ui-avatars.com data: blob:",
   "font-src 'self' https://fonts.gstatic.com https://fonts.font.im",
-  "connect-src 'self' https://openrouter.ai https://*.upstash.io",
+  "connect-src 'self' https://openrouter.ai https://*.upstash.io https://ui-avatars.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

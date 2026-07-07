@@ -1,0 +1,76 @@
+<wxs module="i18n" src="../../utils/i18n.wxs"></wxs>
+<view class="page">
+  <!-- 步骤1：语言选择 -->
+  <view class="step" wx:if="{{step === 1}}">
+    <view class="step-header">
+      <text class="step-icon">🌐</text>
+      <text class="step-title">{{i18n.t(language, 'select_language_title')}}</text>
+      <text class="step-sub">{{i18n.t(language, 'select_language_subtitle')}}</text>
+    </view>
+
+    <view class="lang-list">
+      <view
+        wx:for="{{languages}}"
+        wx:key="code"
+        class="lang-option {{language === item.code ? 'active' : ''}}"
+        bindtap="selectLang"
+        data-lang="{{item.code}}"
+      >
+        <text>{{item.label}}</text>
+        <text wx:if="{{language === item.code}}">✓</text>
+      </view>
+    </view>
+
+    <view class="step-footer">
+      <view class="btn-secondary" bindtap="skipAll">{{i18n.t(language, 'skip')}}</view>
+      <view class="btn-primary" bindtap="nextStep">{{i18n.t(language, 'next')}}</view>
+    </view>
+  </view>
+
+  <!-- 步骤2：兴趣选择 -->
+  <view class="step" wx:if="{{step === 2}}">
+    <view class="step-header">
+      <text class="step-icon">📚</text>
+      <text class="step-title">{{i18n.t(language, 'select_interests')}}</text>
+    </view>
+
+    <view class="interest-grid">
+      <view
+        wx:for="{{interestOptions}}"
+        wx:key="id"
+        class="interest-item {{wxsSelected[item.id] ? 'active' : ''}}"
+        bindtap="toggleInterest"
+        data-id="{{item.id}}"
+      >
+        <text>{{item.label}}</text>
+      </view>
+    </view>
+
+    <view class="step-footer">
+      <view class="btn-secondary" bindtap="prevStep">{{i18n.t(language, 'back')}}</view>
+      <view class="btn-primary" bindtap="nextStep">{{i18n.t(language, 'next')}}</view>
+    </view>
+  </view>
+
+  <!-- 步骤3：姓名 -->
+  <view class="step" wx:if="{{step === 3}}">
+    <view class="step-header">
+      <text class="step-icon">👤</text>
+      <text class="step-title">{{i18n.t(language, 'name_label')}}</text>
+      <text class="step-sub">{{i18n.t(language, 'name_subtitle')}}</text>
+    </view>
+
+    <input
+      class="name-input"
+      placeholder="{{i18n.t(language, 'name_placeholder')}}"
+      value="{{userName}}"
+      bindinput="onNameInput"
+      maxlength="30"
+    />
+
+    <view class="step-footer">
+      <view class="btn-secondary" bindtap="prevStep">{{i18n.t(language, 'back')}}</view>
+      <view class="btn-primary" bindtap="finish">{{i18n.t(language, 'start_chat')}}</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,91 @@
+.card {
+  background: var(--white);
+  border: 1rpx solid var(--border);
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.card:active {
+  transform: scale(0.98);
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  border: 3rpx solid var(--vermilion);
+  flex-shrink: 0;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--ink-500);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vermilion-line {
+  width: 32rpx;
+  height: 2rpx;
+  background: var(--vermilion);
+  border-radius: 1rpx;
+  margin: 12rpx 0;
+}
+
+.era {
+  font-size: 22rpx;
+  color: var(--ink-300);
+  background: var(--ink-100);
+  padding: 4rpx 16rpx;
+  border-radius: 8rpx;
+}
+
+.desc {
+  font-size: 24rpx;
+  color: var(--ink-400);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 20rpx;
+  border-top: 1rpx solid var(--border);
+}
+
+.category {
+  font-size: 20rpx;
+  color: var(--ink-300);
+}
+
+.work {
+  font-size: 20rpx;
+  color: var(--vermilion);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200rpx;
+}

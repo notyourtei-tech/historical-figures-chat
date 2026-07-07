@@ -1,0 +1,28 @@
+<wxs module="util">
+  var getKeyWork = function(celebrity, language) {
+    if (!celebrity || !celebrity.keyWorks) return '';
+    var works = celebrity.keyWorks[language];
+    if (!works || works.length === 0) {
+      // 降级到中文
+      works = celebrity.keyWorks['zh'];
+    }
+    if (!works || works.length === 0) return '';
+    return works[0];
+  };
+  module.exports = { getKeyWork: getKeyWork };
+</wxs>
+<view class="card" bindtap="onTap">
+  <view class="card-header">
+    <image class="avatar" src="{{celebrity.avatar}}" mode="aspectFill" />
+    <view class="info">
+      <text class="name">{{celebrity.name[language]}}</text>
+      <view class="vermilion-line"></view>
+      <text class="era">{{celebrity.era}}</text>
+    </view>
+  </view>
+  <text class="desc">{{celebrity.description[language]}}</text>
+  <view class="card-footer">
+    <text class="category">{{celebrity.category}}</text>
+    <text class="work">{{util.getKeyWork(celebrity, language)}}</text>
+  </view>
+</view>

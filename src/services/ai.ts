@@ -32,11 +32,11 @@ async function callChatApi(
 
 const errorMsgs: Record<string, Record<Language, string>> = {
   [ErrorCode.MISSING_API_KEY]: {
-    zh: "【系统提示】请在 .env.local 中配置 API Key（OPENROUTER_API_KEY），保存后重启开发服务器。",
-    en: "[System] Please configure API Key in .env.local (OPENROUTER_API_KEY), then restart dev server.",
-    ja: "【システム】.env.local に API Key を設定し、開発サーバーを再起動してください。",
-    vi: "[Hệ thống] Vui lòng cấu hình API Key trong .env.local và khởi động lại server.",
-    my: "[စနစ်] .env.local တွင် API Key ထည့်ပြီး server ကို ပြန်စတင်ပါ။"
+    zh: "【系统提示】未检测到 API Key（OPENROUTER_API_KEY）。请在环境变量中配置后重启服务。可在 openrouter.ai 免费获取。",
+    en: "[System] API Key not configured (OPENROUTER_API_KEY). Set it in your environment variables and restart. Get a free key at openrouter.ai.",
+    ja: "【システム】API Key（OPENROUTER_API_KEY）が設定されていません。環境変数に設定して再起動してください。openrouter.ai で無料取得できます。",
+    vi: "[Hệ thống] Chưa cấu hình API Key (OPENROUTER_API_KEY). Hãy thiết lập trong biến môi trường và khởi động lại. Lấy key miễn phí tại openrouter.ai.",
+    my: "[စနစ်] API Key (OPENROUTER_API_KEY) မတွေ့ပါ။ ပတ်ဝန်းကျင် variable တွင် ထည့်ပြီး ပြန်စတင်ပါ။ openrouter.ai တွင် အခမဲ့ရယူနိုင်ပါသည်။"
   },
   [ErrorCode.API_CALL_FAILED]: {
     zh: "AI API 请求失败，请检查网络或 API Key 配置。",

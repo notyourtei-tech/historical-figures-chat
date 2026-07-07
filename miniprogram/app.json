@@ -1,0 +1,29 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/chat/chat",
+    "pages/onboarding/onboarding"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#f8f5f0",
+    "navigationBarTitleText": "万古灵犀",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f8f5f0"
+  },
+  "tabBar": {
+    "color": "#6b6258",
+    "selectedColor": "#c0392b",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "先贤"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

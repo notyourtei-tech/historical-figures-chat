@@ -85,7 +85,8 @@ function typewriterEffect(el: HTMLElement, text: string, speed: number = 28) {
 }
 
 export default function ChatPage() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params.id as string;
   const router = useRouter();
   const { language, t } = useLanguage();
   const [celebrity, setCelebrity] = useState<Celebrity | null>(null);

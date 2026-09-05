@@ -4,13 +4,22 @@ import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { GreetingRequestSchema } from "@/lib/validation";
 import { logSecurityEvent } from "@/lib/security-logger";
 import { ErrorCode } from "@/lib/errors";
+import { captureOperationalError } from "@/lib/observability";
+import { celebrities } from "@/data/celebrities";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 function isAllowedOrigin(req: NextRequest): boolean {
+  const host = req.headers.get("host") || "";
+
+  // 开发环境 / IDE 预览代理：放宽来源校验，避免误拦截本地访问
+  if (process.env.NODE_ENV !== "production") return true;
+  if (host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("::1")) {
+    return true;
+  }
+
   const origin = req.headers.get("origin");
-  const host = req.headers.get("host");
 
   if (origin && host) {
     try {
@@ -45,7 +54,7 @@ export async function POST(req: NextRequest) {
 
   try {
     if (!isAllowedOrigin(req)) {
-      logSecurityEvent({ type: "INVALID_ORIGIN", ip, path: "/api/greeting", detail: req.headers.get("origin") || "none" });
+      logSecurityEvent({ type: "INVALID_ORIGIN", ip, path: "/api/greeting", detail: "origin_mismatch" });
       return NextResponse.json(
         { success: false, error: ErrorCode.INVALID_ORIGIN },
         { status: 403 }
@@ -74,23 +83,28 @@ export async function POST(req: NextRequest) {
 
     const parsed = GreetingRequestSchema.safeParse(body);
     if (!parsed.success) {
-      logSecurityEvent({ type: "INVALID_INPUT", ip, path: "/api/greeting", detail: parsed.error.issues.map(i => i.message).join("; ") });
+      logSecurityEvent({ type: "INVALID_INPUT", ip, path: "/api/greeting", detail: "schema_validation_failed" });
       return NextResponse.json(
         { success: false, error: ErrorCode.INVALID_REQUEST },
         { status: 400 }
       );
     }
 
-    const { celebrity, language } = parsed.data;
+    const { language } = parsed.data;
+    const celebrity = celebrities.find((candidate) => candidate.id === parsed.data.celebrity.id);
+    if (!celebrity) {
+      logSecurityEvent({ type: "INVALID_INPUT", ip, path: "/api/greeting", detail: "unknown_celebrity" });
+      return NextResponse.json({ success: false, error: ErrorCode.INVALID_REQUEST }, { status: 400 });
+    }
 
     const result = await runGreeting(celebrity, language);
     return NextResponse.json(result, {
       headers: { "X-RateLimit-Remaining": String(remaining) },
     });
   } catch (error: unknown) {
-    const detail = error instanceof Error ? error.message : String(error);
-    console.error("[API /greeting]", detail);
-    logSecurityEvent({ type: "SUSPICIOUS_ACTIVITY", ip, path: "/api/greeting", detail: detail.slice(0, 200) });
+    console.error("[API /greeting] Request failed");
+    captureOperationalError(error, { route: "/api/greeting" });
+    logSecurityEvent({ type: "SUSPICIOUS_ACTIVITY", ip, path: "/api/greeting", detail: "unhandled_request_error" });
     return NextResponse.json(
       { success: false, error: ErrorCode.SERVER_ERROR, content: "Internal server error" },
       { status: 500 }

@@ -8,12 +8,48 @@
   --vh: 100vh;
 }
 
+html {
+  scroll-behavior: smooth;
+  background: #f7f4ee;
+}
+
 body {
   background-color: #f7f4ee;
   color: #1a1714;
-  font-family: 'Noto Serif SC', serif;
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(192, 57, 43, 0.2);
+  color: #1a1714;
+}
+
+:where(a, button, input, textarea, [tabindex]):focus-visible {
+  outline: 3px solid rgba(192, 57, 43, 0.42);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 50%;
+  z-index: 9999;
+  transform: translate(-50%, -160%);
+  padding: 0.65rem 1rem;
+  border-radius: 0.5rem;
+  background: #1a1714;
+  color: #fff;
+  font-family: system-ui, sans-serif;
+  font-size: 0.875rem;
+  transition: transform 0.2s ease;
+}
+
+.skip-link:focus {
+  transform: translate(-50%, 0);
 }
 
 ::-webkit-scrollbar {
@@ -154,6 +190,7 @@ body {
 .chat-input-wrap {
   background: #f7f4ee;
   border-top: 1px solid rgba(26,23,20,0.1);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .page-transition {
@@ -165,9 +202,19 @@ body {
   border: 1px solid rgba(26,23,20,0.08);
 }
 
-.ink-card:hover {
-  border-color: rgba(192,57,43,0.3);
-  box-shadow: 0 4px 20px rgba(26,23,20,0.06);
+@media (hover: hover) and (pointer: fine) {
+  .ink-card:hover {
+    border-color: rgba(192,57,43,0.3);
+    box-shadow: 0 10px 28px rgba(26,23,20,0.08);
+    transform: translateY(-2px);
+  }
+}
+
+@media (pointer: coarse) {
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 .btn-send {
@@ -191,5 +238,16 @@ body {
 @media (max-width: 768px) {
   .chat-input-wrap textarea {
     font-size: 16px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

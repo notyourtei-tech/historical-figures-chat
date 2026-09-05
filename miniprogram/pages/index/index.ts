@@ -3,6 +3,13 @@ import { t, LANGUAGE_LABELS, translateCategory, countInterestMatches } from '../
 import { getChatHistoryList } from '../../utils/ai-service';
 import { Language, Celebrity } from '../../utils/types';
 
+function getCategoryOptions(language: Language) {
+  return CATEGORIES.map((id) => ({
+    id,
+    label: translateCategory(id, language),
+  }));
+}
+
 const CATEGORIES = ['哲学家', '科学家', '文学家', '政治家', '军事家', '艺术家', '弈者', '智者', '政治军事领袖'];
 
 Page({
@@ -13,7 +20,7 @@ Page({
     searchTerm: '',
     selectedCategory: 'all',
     filteredCelebrities: [] as Celebrity[],
-    categories: CATEGORIES,
+    categories: getCategoryOptions('zh'),
     userName: '友君',
     chatHistoryList: [] as any[],
   },
@@ -26,6 +33,7 @@ Page({
     this.setData({
       language,
       langLabel: LANGUAGE_LABELS[language],
+      categories: getCategoryOptions(language),
       userName: profile?.name || '友君',
     });
 
@@ -40,6 +48,7 @@ Page({
     this.setData({
       language,
       langLabel: LANGUAGE_LABELS[language],
+      categories: getCategoryOptions(language),
       userName: profile?.name || '友君',
     });
 
@@ -62,6 +71,7 @@ Page({
     this.setData({
       language: lang,
       langLabel: LANGUAGE_LABELS[lang],
+      categories: getCategoryOptions(lang),
       showLangMenu: false,
     });
     this.filterCelebrities();

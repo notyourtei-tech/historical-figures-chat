@@ -68,11 +68,11 @@
       >{{i18n.t(language, 'all')}}</view>
       <view
         wx:for="{{categories}}"
-        wx:key="*this"
-        class="category-item {{selectedCategory === item ? 'active' : ''}}"
-        bindtap="selectCategory"
-        data-cat="{{item}}"
-      >{{item}}</view>
+      wx:key="id"
+      class="category-item {{selectedCategory === item.id ? 'active' : ''}}"
+      bindtap="selectCategory"
+      data-cat="{{item.id}}"
+    >{{item.label}}</view>
     </view>
   </scroll-view>
 

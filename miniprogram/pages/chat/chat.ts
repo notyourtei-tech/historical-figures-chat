@@ -110,13 +110,14 @@ Page({
       canSend: false,
       isLoading: true,
     });
+    this.scrollToBottom();
 
     try {
       const response = await chatWithCelebrity(celebrity, newMessages, language);
       const assistantMessage: Message = {
         id: generateId(),
         role: 'assistant',
-        content: response || '',
+        content: response || t(language, 'error_ai_failed'),
         timestamp: Date.now(),
       };
       const finalMessages = [...newMessages, assistantMessage];
@@ -200,7 +201,7 @@ Page({
   onScroll() {
     // 小程序 scroll-view 不支持直接获取 scrollTop
     // 这里简化处理，在用户向上滚动时显示滚动按钮
-    this.setData({ showScrollBtn: false });
+    this.setData({ showScrollBtn: true });
   },
 
   scrollToBottom() {

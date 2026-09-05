@@ -62,7 +62,7 @@ module.exports = {
         },
       },
       fontFamily: {
-        serif: ['"Noto Serif SC"', 'serif', '"SimSun"', '"宋体"'],
+        serif: ['"Noto Serif SC"', '"Source Han Serif SC"', '"Songti SC"', 'STSong', 'SimSun', 'serif'],
         sans: ['system-ui', '-apple-system', 'sans-serif'],
       },
       borderRadius: {

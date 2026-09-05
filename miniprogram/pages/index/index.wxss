@@ -3,13 +3,14 @@
 .page {
   min-height: 100vh;
   background: var(--ink-50);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24rpx 32rpx;
+  padding: calc(24rpx + env(safe-area-inset-top)) 32rpx 24rpx;
   background: rgba(248, 245, 240, 0.95);
   backdrop-filter: blur(10px);
   position: sticky;
@@ -33,6 +34,12 @@
   border-radius: 16rpx;
   font-size: 24rpx;
   color: var(--ink-400);
+  min-height: 64rpx;
+  box-sizing: border-box;
+}
+
+.header-lang:active {
+  background: var(--ink-200);
 }
 
 .lang-dropdown {
@@ -75,7 +82,7 @@
 .hero {
   margin: 32rpx;
   padding: 64rpx 48rpx;
-  background: linear-gradient(135deg, rgba(192, 57, 43, 0.06), rgba(192, 57, 43, 0.02));
+  background: linear-gradient(135deg, rgba(192, 57, 43, 0.11), rgba(255, 255, 255, 0.94) 58%, rgba(192, 57, 43, 0.04));
   border: 1rpx solid rgba(192, 57, 43, 0.1);
   border-radius: 32rpx;
   text-align: center;
@@ -117,6 +124,12 @@
   font-size: 28rpx;
   color: var(--ink-500);
   box-sizing: border-box;
+  min-height: 88rpx;
+}
+
+.search-input:focus {
+  border-color: var(--vermilion);
+  box-shadow: 0 0 0 4rpx rgba(192, 57, 43, 0.12);
 }
 
 .search-input::placeholder {
@@ -150,6 +163,10 @@
   background: var(--vermilion);
   color: var(--white);
   border-color: var(--vermilion);
+}
+
+.category-item:active {
+  transform: scale(0.97);
 }
 
 /* 人物网格 */
@@ -197,6 +214,10 @@
   border: 1rpx solid var(--border);
   border-radius: 16rpx;
   margin-bottom: 16rpx;
+}
+
+.history-item:active {
+  background: var(--ink-100);
 }
 
 .history-name {

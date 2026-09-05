@@ -8,6 +8,7 @@ import { Check, Globe, Sparkles, BookOpen, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MBTIPanel from "@/components/MBTIPanel";
 import { LANGUAGE_LABELS, translateInterest } from "@/lib/i18n";
+import { trackEvent } from "@/lib/analytics";
 
 const LANGUAGES: Language[] = ["zh", "en", "ja", "vi", "my"];
 
@@ -32,6 +33,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
       language,
       mbti: finalMbti,
     });
+    trackEvent("onboarding_completed", { language, has_mbti: Boolean(finalMbti), interest_count: selectedInterests.length });
     onComplete();
   };
 
@@ -40,7 +42,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
       <div id="ink-bg" />
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={false}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-border relative overflow-hidden max-h-[90vh] overflow-y-auto"
       >

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { captureOperationalError } from "@/lib/observability";
 
 const ERROR_TEXTS: Record<string, { title: string; desc: string; btn: string }> = {
   zh: { title: "出了点问题", desc: "发生了错误，请尝试刷新页面。", btn: "刷新页面" },
@@ -63,6 +64,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("ErrorBoundary caught:", error, errorInfo);
+    captureOperationalError(error, { component: "ErrorBoundary", componentStack: errorInfo.componentStack?.slice(0, 500) });
   }
 
   render() {

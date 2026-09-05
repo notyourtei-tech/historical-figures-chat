@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, MessageCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { celebrities } from "@/data/celebrities";
 import { useLanguage } from "@/context/LanguageContext";
+import { Language } from "@/types";
 
 interface ConversationMeta {
   id: string;
@@ -45,14 +46,64 @@ export default function ChatHistorySidebar({
   onClose: () => void;
   onSelect: (celebrityId: string) => void;
 }) {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const [conversations, setConversations] = useState<ConversationMeta[]>([]);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (open) {
-      setConversations(loadConversations());
+      const local = loadConversations();
+      setConversations(local);
+      let active = true;
+      void fetch("/api/conversations", { cache: "no-store" })
+        .then(async (response) => {
+          if (!response.ok || !active) return;
+          const data = await response.json() as { success?: boolean; conversations?: Array<{ celebrity_id: string; language: string; last_message: string; updated_at: string }> };
+          if (!data.success || !Array.isArray(data.conversations)) return;
+          const cloud = data.conversations.map((conversation) => {
+            const celeb = celebrities.find((item) => item.id === conversation.celebrity_id);
+            const lang = conversation.language as Language;
+            return {
+              id: conversation.celebrity_id,
+              celebrityId: conversation.celebrity_id,
+              celebrityName: celeb?.name[lang] || celeb?.name.zh || conversation.celebrity_id,
+              lastMessage: conversation.last_message,
+              messageCount: 0,
+              lastTimestamp: new Date(conversation.updated_at).getTime(),
+              lang: conversation.language,
+            } satisfies ConversationMeta;
+          });
+          const combined = new Map<string, ConversationMeta>();
+          [...local, ...cloud].forEach((conversation) => {
+            const existing = combined.get(conversation.celebrityId);
+            if (!existing || existing.lastTimestamp < conversation.lastTimestamp) combined.set(conversation.celebrityId, conversation);
+          });
+          setConversations([...combined.values()].sort((a, b) => b.lastTimestamp - a.lastTimestamp));
+        })
+        .catch(() => undefined);
+      return () => { active = false; };
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
+    window.requestAnimationFrame(() => closeButtonRef.current?.focus());
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocus?.focus();
+    };
+  }, [open, onClose]);
 
   const handleDelete = useCallback((id: string) => {
     const celeb = celebrities.find((c) => c.id === id);
@@ -63,6 +114,7 @@ export default function ChatHistorySidebar({
     const updated = conversations.filter((c) => c.celebrityId !== id);
     saveConversations(updated);
     setConversations(updated);
+    void fetch(`/api/conversations/${encodeURIComponent(id)}`, { method: "DELETE" }).catch(() => undefined);
   }, [conversations]);
 
   const formatTime = (ts: number) => {
@@ -88,6 +140,7 @@ export default function ChatHistorySidebar({
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[150] bg-ink-500/30 backdrop-blur-sm"
             onClick={onClose}
+            aria-hidden="true"
           />
           <motion.div
             initial={{ x: -300, opacity: 0 }}
@@ -95,14 +148,19 @@ export default function ChatHistorySidebar({
             exit={{ x: -300, opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="fixed left-0 top-0 bottom-0 z-[160] w-72 bg-white border-r border-border shadow-xl flex flex-col"
+            role="dialog"
+            aria-modal="true"
+            aria-label="聊天记录"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <h2 className="text-sm font-bold text-ink-500">{t("chat_history") || "对话历史"}</h2>
               <button
+                ref={closeButtonRef}
                 onClick={onClose}
                 className="touch-target w-8 h-8 rounded-lg flex items-center justify-center hover:bg-ink-100 transition-colors"
+                aria-label="关闭聊天记录"
               >
-                <X className="w-4 h-4 text-ink-400" />
+                <X className="w-4 h-4 text-ink-400" aria-hidden="true" />
               </button>
             </div>
 
@@ -122,14 +180,25 @@ export default function ChatHistorySidebar({
                         className={cn(
                           "group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-ink-50"
                         )}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => {
                           onSelect(conv.celebrityId);
                           onClose();
                         }}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            onSelect(conv.celebrityId);
+                            onClose();
+                          }
+                        }}
                       >
                         <img
                           src={celeb?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.celebrityName)}&background=c0392b&color=fff&size=64`}
-                          alt=""
+                          alt={conv.celebrityName}
+                          loading="lazy"
+                          decoding="async"
                           className="w-9 h-9 rounded-full border border-border object-cover flex-shrink-0"
                           onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.celebrityName)}&background=c0392b&color=fff&size=72`; }}
                         />
@@ -145,8 +214,10 @@ export default function ChatHistorySidebar({
                               handleDelete(conv.celebrityId);
                             }}
                             className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-ink-100 transition-opacity"
+                            aria-label={`删除与 ${conv.celebrityName} 的聊天记录`}
+                            title="删除聊天记录"
                           >
-                            <Trash2 className="w-3 h-3 text-ink-300" />
+                            <Trash2 className="w-3 h-3 text-ink-300" aria-hidden="true" />
                           </button>
                         </div>
                       </div>

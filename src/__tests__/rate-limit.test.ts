@@ -61,8 +61,8 @@ describe("getClientIp", () => {
 });
 
 describe("sanitizeInput", () => {
-  it("strips HTML tags", () => {
-    expect(sanitizeInput("<script>alert('xss')</script>")).toBe("alert('xss')");
+  it("removes script content", () => {
+    expect(sanitizeInput("<script>alert('xss')</script>")).toBe("");
   });
 
   it("strips javascript: protocol", () => {

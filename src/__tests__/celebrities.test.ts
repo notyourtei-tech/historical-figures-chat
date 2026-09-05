@@ -34,9 +34,9 @@ describe("celebrities data", () => {
     });
   });
 
-  it("all celebrities have valid avatars", () => {
+  it("all celebrities have valid local avatar paths", () => {
     celebrities.forEach((c) => {
-      expect(c.avatar).toMatch(/^https:\/\/api\.dicebear\.com\//);
+      expect(c.avatar).toMatch(/^\/images\/avatars\/.+\.png$/);
     });
   });
 

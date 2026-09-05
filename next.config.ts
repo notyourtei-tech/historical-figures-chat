@@ -1,3 +1,4 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -12,11 +13,11 @@ const securityHeaders = [
 
 const cspHeader = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' https://api.dicebear.com https://www.transparenttextures.com https://ui-avatars.com data: blob:",
   "font-src 'self' https://fonts.gstatic.com https://fonts.font.im",
-  "connect-src 'self' https://openrouter.ai https://*.upstash.io https://ui-avatars.com",
+  "connect-src 'self' https://openrouter.ai https://*.upstash.io https://*.supabase.co https://*.sentry.io https://*.ingest.sentry.io https://ui-avatars.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -24,6 +25,14 @@ const cspHeader = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["localhost", "127.0.0.1"],
+  // Keep Next scoped to this app. Without an explicit root, the parent lockfile is
+  // selected on this machine, which makes dev compilation unnecessarily large and
+  // can break route compilation when the project path contains non-ASCII characters.
+  outputFileTracingRoot: path.resolve(__dirname),
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
   async headers() {
     return [
       {
@@ -40,12 +49,6 @@ const nextConfig: NextConfig = {
           { key: "Content-Security-Policy", value: cspHeader },
           { key: "Cache-Control", value: "no-store, no-cache, must-revalidate" },
           { key: "Pragma", value: "no-cache" },
-        ],
-      },
-      {
-        source: "/_next/static/(.*)",
-        headers: [
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
       },
     ];

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, lazy, Suspense, useRef, useCallback, memo } from "react";
+import React, { useState, useEffect, useMemo, lazy, Suspense, useRef, memo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { celebrities } from "@/data/celebrities";
@@ -8,6 +8,9 @@ import {
   Search,
   History,
   Globe,
+  MessageCircle,
+  Sparkles,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
@@ -15,18 +18,24 @@ import { countInterestMatches } from "@/lib/interest-map";
 import { getMbtiRecommendations, mbtiCompatibility, getCelebrityMbti } from "@/lib/mbti-match";
 import { translateCategory, translateEra } from "@/lib/i18n";
 import { Language } from "@/types";
+import { AuthMenu } from "@/components/AuthMenu";
 
 const Onboarding = lazy(() => import("@/components/Onboarding"));
 const MBTIPanel = lazy(() => import("@/components/MBTIPanel").then(m => ({ default: m.default })));
 
-const CelebrityCard = memo(function CelebrityCard({ celebrity, language }: { celebrity: (typeof import("@/data/celebrities").celebrities)[number]; language: Language }) {
+const CelebrityCard = memo(function CelebrityCard({ celebrity, language, startChatLabel }: { celebrity: (typeof import("@/data/celebrities").celebrities)[number]; language: Language; startChatLabel: string }) {
   return (
-    <Link href={`/chat/${celebrity.id}`}>
+    <Link
+      href={`/chat/${celebrity.id}`}
+      aria-label={`${startChatLabel}: ${celebrity.name[language]}`}
+      className="group block h-full rounded-xl focus:outline-none"
+    >
       <div className="ink-card rounded-xl bg-white p-5 h-full flex flex-col touch-target">
         <div className="flex items-start gap-3 mb-3">
           <img
             src={celebrity.avatar}
             loading="lazy"
+            decoding="async"
             alt={celebrity.name[language]}
             className="w-14 h-14 rounded-full border-2 border-vermilion object-cover flex-shrink-0"
             onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(celebrity.name.en)}&background=c0392b&color=fff&size=112`; }}
@@ -44,7 +53,7 @@ const CelebrityCard = memo(function CelebrityCard({ celebrity, language }: { cel
           <span className="text-[10px] text-ink-300 uppercase tracking-wider">
             {translateCategory(celebrity.category, language)}
           </span>
-          <span className="text-[10px] text-vermilion font-medium">
+          <span className="text-[10px] text-vermilion font-medium truncate max-w-[55%]">
             {celebrity.keyWorks[language][0]}
           </span>
         </div>
@@ -66,6 +75,14 @@ export default function HomePage() {
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLangOpen(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   useEffect(() => {
@@ -111,7 +128,7 @@ export default function HomePage() {
         const bMbti = userProfile?.mbti ? mbtiCompatibility(userProfile.mbti, getCelebrityMbti(b.id) || "") : 0;
         return bMbti * 3 + bInterest - (aMbti * 3 + aInterest);
       });
-  }, [debouncedSearch, selectedCategory, userProfile]);
+  }, [debouncedSearch, language, selectedCategory, userProfile]);
 
   if (isClient && showOnboarding) {
     return (
@@ -125,27 +142,40 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col relative">
       <div id="ink-bg" />
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-ink-50/90 backdrop-blur-sm border-b border-border">
+      <header className="sticky top-0 z-50 bg-ink-50/90 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <History className="w-5 h-5 text-vermilion" />
-            <span className="text-lg md:text-xl font-bold text-ink-500 tracking-tight">{t("app_name")}</span>
+            <div className="w-8 h-8 rounded-lg bg-vermilion flex items-center justify-center shadow-sm shadow-vermilion/20">
+              <History className="w-4 h-4 text-white" aria-hidden="true" />
+            </div>
+            <div>
+              <span className="block text-base md:text-lg font-bold text-ink-500 tracking-tight leading-tight">{t("app_name")}</span>
+              <span className="hidden md:block text-[10px] text-ink-300 tracking-[0.18em] uppercase mt-0.5">Dialogue across time</span>
+            </div>
           </div>
 
+          <div className="flex items-center gap-2">
+          <AuthMenu />
           <div className="relative" ref={langRef}>
             <button
               onClick={() => setLangOpen(!langOpen)}
               className="touch-target flex items-center gap-2 px-3 py-1.5 rounded-lg bg-ink-100 text-xs font-medium text-ink-400 hover:bg-ink-200 transition-colors"
+              aria-label="切换界面语言"
+              aria-expanded={langOpen}
+              aria-haspopup="menu"
+              aria-controls="language-menu"
             >
-              <Globe className="w-3.5 h-3.5" />
+              <Globe className="w-3.5 h-3.5" aria-hidden="true" />
               {languageLabel(language)}
             </button>
             {langOpen && (
-              <div className="absolute right-0 top-full mt-2 w-36 bg-white border border-border rounded-lg shadow-lg p-1 z-[60]">
+              <div id="language-menu" role="menu" aria-label="语言选项" className="absolute right-0 top-full mt-2 w-36 bg-white border border-border rounded-lg shadow-lg p-1 z-[60]">
                 {(["zh", "en", "ja", "vi", "my"] as Language[]).map((lang) => (
                   <button
                     key={lang}
                     onClick={() => { setLanguage(lang); setLangOpen(false); }}
+                    role="menuitemradio"
+                    aria-checked={language === lang}
                     className={cn(
                       "touch-target w-full text-left px-3 py-2 text-xs rounded-md transition-colors",
                       language === lang ? "text-vermilion font-bold bg-vermilion-light" : "text-ink-400 hover:bg-ink-50"
@@ -157,24 +187,34 @@ export default function HomePage() {
               </div>
             )}
           </div>
+          </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 md:px-6 py-8 md:py-12">
-        <div className="bg-gradient-to-br from-vermilion/5 via-white to-vermilion/3 p-8 md:p-12 rounded-2xl mb-10 text-center border border-vermilion/10 shadow-sm">
-          <h1 className="text-3xl md:text-4xl font-bold text-ink-500 mb-4 font-serif leading-relaxed">
+      <main id="main-content" className="flex-1 max-w-6xl mx-auto w-full px-4 md:px-6 py-7 md:py-12">
+        <section className="relative overflow-hidden bg-gradient-to-br from-vermilion/10 via-white to-ink-100/70 p-7 sm:p-10 md:p-14 rounded-2xl md:rounded-3xl mb-8 md:mb-12 text-center border border-vermilion/10 shadow-sm">
+          <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full border border-vermilion/10" aria-hidden="true" />
+          <div className="absolute -bottom-16 -left-8 w-48 h-48 rounded-full border border-ink-200/80" aria-hidden="true" />
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/80 border border-vermilion/15 px-3 py-1.5 mb-4 text-[10px] font-bold text-vermilion tracking-[0.16em] uppercase">
+              <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+              {t("hero_badge")}
+            </div>
+          <h1 className="text-3xl md:text-5xl font-bold text-ink-500 mb-4 font-serif leading-relaxed">
             {t("hero_title")}
           </h1>
           <div className="w-12 h-0.5 bg-vermilion mx-auto mb-5" />
-          <p className="text-sm md:text-base text-ink-400 max-w-xl mx-auto mb-6 leading-relaxed">
+          <p className="text-sm md:text-base text-ink-400 max-w-2xl mx-auto mb-6 leading-relaxed">
             {t("hero_subtitle")}
           </p>
-          <p className="text-xs text-ink-300">
+          <div className="inline-flex items-center gap-2 text-xs text-ink-300 bg-ink-50/70 rounded-full px-3 py-2">
+            <MessageCircle className="w-3.5 h-3.5 text-vermilion" aria-hidden="true" />
             {isClient && userProfile?.name
               ? t("welcome_user", { name: userProfile.name })
               : t("souls_ready", { count: celebrities.length })}
-          </p>
-        </div>
+          </div>
+          </div>
+        </section>
 
         {/* MBTI Section */}
         {isClient && userProfile?.mbti && mbtiRecommendations.length > 0 && (
@@ -211,7 +251,14 @@ export default function HomePage() {
         )}
 
         {/* Search & Filter */}
-        <section className="mb-6 md:mb-8">
+        <section className="mb-6 md:mb-8" aria-labelledby="explore-heading">
+          <div className="flex items-end justify-between gap-4 mb-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-vermilion font-bold mb-1">Explore</p>
+              <h2 id="explore-heading" className="text-xl font-bold text-ink-500">{t("find_mentor")}</h2>
+            </div>
+            <p className="text-xs text-ink-300" aria-live="polite">{filteredCelebrities.length} / {celebrities.length}</p>
+          </div>
           <div className="flex flex-col md:flex-row gap-3 md:gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-300" />
@@ -220,6 +267,8 @@ export default function HomePage() {
                 placeholder={t("search_sages")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label={t("search_sages")}
+                autoComplete="off"
                 className="touch-target w-full bg-white border border-border rounded-lg py-2.5 pl-10 pr-4 text-sm text-ink-500 placeholder:text-ink-300 focus:outline-none focus:border-vermilion/30 transition-colors"
               />
             </div>
@@ -228,6 +277,7 @@ export default function HomePage() {
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
+                  aria-pressed={selectedCategory === cat}
                   className={cn(
                     "touch-target px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap flex-shrink-0",
                     selectedCategory === cat
@@ -244,22 +294,22 @@ export default function HomePage() {
 
         {/* Character Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence mode="popLayout" initial={false}>
             {filteredCelebrities.length === 0 && (
               <div className="col-span-full text-center py-16">
                 <p className="text-ink-300 text-sm">{t("no_results")}</p>
               </div>
             )}
-            {filteredCelebrities.map((celebrity, index) => (
+              {filteredCelebrities.map((celebrity, index) => (
               <motion.div
                 key={celebrity.id}
                 layout
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3, delay: index * 0.03 }}
+                transition={{ duration: 0.28, delay: Math.min(index, 10) * 0.03 }}
               >
-                <CelebrityCard celebrity={celebrity} language={language} />
+                <CelebrityCard celebrity={celebrity} language={language} startChatLabel={t("start_chat")} />
               </motion.div>
             ))}
           </AnimatePresence>
@@ -269,10 +319,14 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-border py-8 bg-ink-100/50">
         <div className="max-w-6xl mx-auto px-6 text-center">
-          <History className="w-5 h-5 text-ink-300 mx-auto mb-3" />
+          <History className="w-5 h-5 text-ink-300 mx-auto mb-3" aria-hidden="true" />
           <p className="text-[10px] text-ink-300 uppercase tracking-widest">
             {t("footer_copyright")}
           </p>
+          <div className="mt-3 flex justify-center gap-4 text-xs text-ink-300 normal-case tracking-normal">
+            <Link href="/privacy" className="hover:text-vermilion">隐私说明</Link>
+            <Link href="/terms" className="hover:text-vermilion">使用规则</Link>
+          </div>
         </div>
       </footer>
 
@@ -296,9 +350,10 @@ export default function HomePage() {
               <div className="md:hidden w-10 h-1 rounded-full bg-ink-200 mx-auto mb-4" />
               <button
                 onClick={() => setShowMbtiModal(false)}
-                className="absolute top-4 right-4 w-10 h-10 md:w-8 md:h-8 rounded-lg bg-ink-100 flex items-center justify-center text-ink-400 hover:bg-ink-200 transition-colors"
+                className="touch-target absolute top-4 right-4 w-10 h-10 md:w-8 md:h-8 rounded-lg bg-ink-100 flex items-center justify-center text-ink-400 hover:bg-ink-200 transition-colors"
+                aria-label="关闭"
               >
-                ×
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
               <h3 className="text-lg font-bold text-ink-500 mb-4 pr-8">{t("mbti_step_title")}</h3>
               <Suspense fallback={null}>

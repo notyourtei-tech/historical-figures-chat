@@ -20,8 +20,16 @@ type RouteContext = { params: Promise<{ celebrityId: string }> };
 
 async function authorize() {
   const { supabase, user } = await getAuthenticatedUser();
-  if (!supabase) return { response: NextResponse.json({ success: false, error: ErrorCode.CONFIGURATION_REQUIRED }, { status: 503 }) };
-  if (!user) return { response: NextResponse.json({ success: false, error: ErrorCode.AUTH_REQUIRED }, { status: 401 }) };
+  // Cloud sync is optional. A signed-out visitor continues in local mode, so
+  // this expected capability check must not be recorded as a server failure.
+  if (!supabase || !user) {
+    return {
+      response: NextResponse.json(
+        { success: false, error: supabase ? ErrorCode.AUTH_REQUIRED : ErrorCode.CONFIGURATION_REQUIRED, storage: "local" },
+        { headers: { "Cache-Control": "no-store" } }
+      ),
+    };
+  }
   return { supabase, user };
 }
 

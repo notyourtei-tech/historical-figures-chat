@@ -6,10 +6,14 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const { supabase, user } = await getAuthenticatedUser();
-  if (!supabase) {
-    return NextResponse.json({ success: false, error: ErrorCode.CONFIGURATION_REQUIRED }, { status: 503 });
+  // Cloud sync is an opt-in enhancement. Guests and the zero-cost local mode
+  // must not create a server error each time the chat page checks for history.
+  if (!supabase || !user) {
+    return NextResponse.json(
+      { success: false, error: supabase ? ErrorCode.AUTH_REQUIRED : ErrorCode.CONFIGURATION_REQUIRED, storage: "local" },
+      { headers: { "Cache-Control": "no-store" } }
+    );
   }
-  if (!user) return NextResponse.json({ success: false, error: ErrorCode.AUTH_REQUIRED }, { status: 401 });
 
   const { data, error } = await supabase
     .from("conversations")

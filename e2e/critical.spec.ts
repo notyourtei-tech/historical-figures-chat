@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 
 const profile = { name: "Test User", interests: [], language: "zh" };
 const acceptedConsent = {
@@ -14,6 +15,15 @@ async function seedVisitor(page: import("@playwright/test").Page, consent = acce
     localStorage.setItem("user_profile", JSON.stringify(nextProfile));
     localStorage.setItem("wan_gu_ling_xi_privacy_consent", JSON.stringify(nextConsent));
   }, { nextProfile: profile, nextConsent: consent });
+}
+
+function createLongHistory() {
+  return Array.from({ length: 48 }, (_, index) => ({
+    id: `history-${index}`,
+    role: index % 2 === 0 ? "assistant" : "user",
+    content: `这是第 ${index + 1} 条测试消息，用来模拟一段足够长的历史对话，确保消息再多也不会遮住输入框。`,
+    timestamp: Date.now() - (48 - index) * 60_000,
+  }));
 }
 
 test("home page is usable without horizontal overflow", async ({ page }) => {
@@ -42,6 +52,69 @@ test("chat sends, receives, and persists a local conversation", async ({ page })
   await input.press("Enter");
   await expect(page.getByText("知行合一，先从眼前一步开始。")).toBeVisible();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("chat_history_confucius") || "")).toContain("我今天该如何学习？");
+});
+
+test("long chat history never pushes the composer outside the viewport", async ({ page }) => {
+  await seedVisitor(page);
+  const history = createLongHistory();
+  await page.addInitScript((messages) => {
+    localStorage.setItem("chat_history_confucius", JSON.stringify(messages));
+  }, history);
+  await page.route("**/api/chat?stream=1", (route) => route.fulfill({
+    contentType: "text/event-stream",
+    body: [
+      'data: {"type":"delta","content":"我已收到你的问题。"}',
+      'data: {"type":"complete"}',
+      "",
+    ].join("\n\n"),
+  }));
+
+  await page.goto("/chat/confucius");
+  const input = page.getByRole("textbox", { name: "开启对话..." });
+  await expect(input).toBeVisible();
+  await expect.poll(() => page.evaluate(() => {
+    const composer = document.querySelector<HTMLElement>('[data-testid="chat-composer"]');
+    const scrollArea = document.querySelector<HTMLElement>('[data-testid="chat-scroll-area"]');
+    if (!composer || !scrollArea) return false;
+    const composerRect = composer.getBoundingClientRect();
+    // Browser/device pixel rounding can make a layout-aligned edge differ by a
+    // fraction of a CSS pixel. Keep a small tolerance while still requiring
+    // the composer to be entirely reachable in the visible viewport.
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const edgeTolerance = 2;
+    return composerRect.top >= -edgeTolerance
+      && composerRect.bottom <= viewportHeight + edgeTolerance
+      && scrollArea.scrollHeight > scrollArea.clientHeight
+      && document.documentElement.scrollHeight <= document.documentElement.clientHeight + edgeTolerance;
+  })).toBe(true);
+
+  await input.focus();
+  await expect.poll(() => page.evaluate(() => document.activeElement?.tagName)).toBe("TEXTAREA");
+  await input.fill("长对话后仍然应该可以方便地继续提问。");
+  await input.press("Enter");
+  await expect(page.getByText("我已收到你的问题。")).toBeVisible();
+  await expect(input).toBeVisible();
+});
+
+test("chat composer passes the WCAG AA automated scan", async ({ page }) => {
+  await seedVisitor(page);
+  await page.addInitScript(() => {
+    localStorage.setItem("chat_history_confucius", JSON.stringify([{
+      id: "a11y-static-message",
+      role: "user",
+      content: "用于无障碍扫描的静态消息。",
+      timestamp: Date.now(),
+    }]));
+  });
+  await page.goto("/chat/confucius");
+  await expect(page.getByRole("textbox", { name: "开启对话..." })).toBeVisible();
+  const message = page.locator('[data-msg-id="a11y-static-message"]');
+  await expect(message).toBeVisible();
+  await expect.poll(() => message.evaluate((element) => getComputedStyle(element).opacity)).toBe("1");
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  expect(results.violations).toEqual([]);
 });
 
 test("local experience login never submits the password", async ({ page }) => {

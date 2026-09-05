@@ -644,7 +644,10 @@ export default function ChatPage() {
   const currentCelebrity = celebrity;
 
   return (
-    <div className="h-[var(--vh)] flex flex-col bg-ink-50">
+    <main
+      id="main-content"
+      className="flex h-[var(--vh)] max-h-[var(--vh)] min-h-0 flex-col overflow-hidden bg-ink-50"
+    >
       {/* Header */}
       <header className="h-14 md:h-16 bg-ink-50 border-b border-border flex items-center justify-between px-3 md:px-6 flex-shrink-0 z-40">
         <div className="flex items-center gap-3">
@@ -701,12 +704,13 @@ export default function ChatPage() {
       {/* Chat Area */}
       <div
         ref={chatAreaRef}
-        className="flex-1 page-transition"
+        className="page-transition flex min-h-0 flex-1 flex-col overflow-hidden"
       >
         <div
           ref={scrollRef}
           onScroll={handleScroll}
-          className="h-full overflow-y-auto custom-scrollbar overscroll-contain"
+          data-testid="chat-scroll-area"
+          className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain"
           role="log"
           aria-live="polite"
           aria-relevant="additions text"
@@ -783,7 +787,7 @@ export default function ChatPage() {
                       )}
                     </div>
                     {!typewritingMessages.current.has(msg.id) && (
-                      <span className="text-[9px] text-ink-300 mt-1 px-1">
+                      <span className="text-[9px] text-ink-400 mt-1 px-1">
                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </span>
                     )}
@@ -821,7 +825,7 @@ export default function ChatPage() {
                     <span className="w-1.5 h-1.5 bg-vermilion/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                   </div>
                   {longWait && (
-                    <p className="text-[11px] text-ink-300 mt-1 animate-pulse">{t("long_wait")}</p>
+                    <p className="text-[11px] text-ink-400 mt-1 animate-pulse">{t("long_wait")}</p>
                   )}
                 </div>
               </div>
@@ -831,7 +835,12 @@ export default function ChatPage() {
       </div>
 
       {/* Input Area */}
-      <div className="chat-input-wrap flex-shrink-0 z-40">
+      <div
+        className="chat-input-wrap z-40 shrink-0"
+        data-testid="chat-composer"
+        role="region"
+        aria-label="消息输入区"
+      >
         <div className="max-w-3xl mx-auto px-3 md:px-6 py-3">
           {interjection && !isLoading && (
             <button
@@ -857,7 +866,7 @@ export default function ChatPage() {
               placeholder={t("input_placeholder")}
               aria-label={t("input_placeholder")}
               maxLength={2000}
-              className="touch-target flex-1 bg-transparent border-none focus:ring-0 text-sm text-ink-500 placeholder:text-ink-300 resize-none max-h-[120px] py-2 leading-relaxed"
+              className="touch-target flex-1 bg-transparent border-none focus:ring-0 text-sm text-ink-500 placeholder:text-ink-400 resize-none max-h-[120px] py-2 leading-relaxed"
               rows={1}
             />
             <button
@@ -872,7 +881,7 @@ export default function ChatPage() {
               <Send className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-[10px] text-ink-300 text-center mt-1.5 hidden md:block">
+          <p className="text-[10px] text-ink-400 text-center mt-1.5 hidden md:block">
             {t("input_hint")}
           </p>
         </div>
@@ -882,6 +891,6 @@ export default function ChatPage() {
         onClose={() => setSidebarOpen(false)}
         onSelect={(cid) => router.push(`/chat/${cid}`)}
       />
-    </div>
+    </main>
   );
 }

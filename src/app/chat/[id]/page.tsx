@@ -692,6 +692,7 @@ export default function ChatPage() {
             width={36}
             height={36}
             sizes="36px"
+            priority
             unoptimized
             alt={currentCelebrity.name[language]}
             className="w-9 h-9 rounded-full border-2 border-vermilion object-cover"

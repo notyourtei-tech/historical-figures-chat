@@ -96,6 +96,26 @@ test("long chat history never pushes the composer outside the viewport", async (
   await expect(input).toBeVisible();
 });
 
+test("first-visit privacy choice never hides the composer", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.removeItem("wan_gu_ling_xi_privacy_consent");
+    localStorage.setItem("user_profile", JSON.stringify({ name: "Test User", interests: [], language: "zh" }));
+  });
+  await page.goto("/chat/confucius");
+  const composer = page.getByTestId("chat-composer");
+  const consentBanner = page.getByTestId("privacy-consent-banner");
+  await expect(composer).toBeVisible();
+  await expect(consentBanner).toBeVisible();
+  await expect.poll(() => page.evaluate(() => {
+    const composerElement = document.querySelector<HTMLElement>('[data-testid="chat-composer"]');
+    const bannerElement = document.querySelector<HTMLElement>('[data-testid="privacy-consent-banner"]');
+    if (!composerElement || !bannerElement) return false;
+    const composerRect = composerElement.getBoundingClientRect();
+    const bannerRect = bannerElement.getBoundingClientRect();
+    return bannerRect.bottom <= composerRect.top || bannerRect.top >= composerRect.bottom;
+  })).toBe(true);
+});
+
 test("chat composer passes the WCAG AA automated scan", async ({ page }) => {
   await seedVisitor(page);
   await page.addInitScript(() => {

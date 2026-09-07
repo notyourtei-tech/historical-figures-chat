@@ -8,7 +8,7 @@ describe("translateCategory", () => {
   });
 
   it("returns original for unknown category", () => {
-    expect(translateCategory("未知" as any, "zh")).toBe("未知");
+    expect(translateCategory("未知" as Parameters<typeof translateCategory>[0], "zh")).toBe("未知");
   });
 });
 

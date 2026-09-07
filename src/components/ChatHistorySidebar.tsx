@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, MessageCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,27 @@ function saveConversations(convos: ConversationMeta[]) {
   } catch {
     // ignore
   }
+}
+
+function ConversationAvatar({ avatar, name }: { avatar?: string; name: string }) {
+  const [fallback, setFallback] = useState(false);
+  const src = fallback || !avatar
+    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=c0392b&color=fff&size=72`
+    : avatar;
+
+  return (
+    <Image
+      src={src}
+      width={36}
+      height={36}
+      sizes="36px"
+      loading="lazy"
+      unoptimized
+      alt={name}
+      className="w-9 h-9 rounded-full border border-border object-cover flex-shrink-0"
+      onError={() => setFallback(true)}
+    />
+  );
 }
 
 export default function ChatHistorySidebar({
@@ -194,14 +216,7 @@ export default function ChatHistorySidebar({
                           }
                         }}
                       >
-                        <img
-                          src={celeb?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.celebrityName)}&background=c0392b&color=fff&size=64`}
-                          alt={conv.celebrityName}
-                          loading="lazy"
-                          decoding="async"
-                          className="w-9 h-9 rounded-full border border-border object-cover flex-shrink-0"
-                          onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.celebrityName)}&background=c0392b&color=fff&size=72`; }}
-                        />
+                        <ConversationAvatar avatar={celeb?.avatar} name={conv.celebrityName} />
                         <div className="min-w-0 flex-1">
                           <h3 className="text-xs font-bold text-ink-500 truncate">{conv.celebrityName}</h3>
                           <p className="text-[10px] text-ink-300 truncate mt-0.5">{conv.lastMessage}</p>

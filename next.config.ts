@@ -57,6 +57,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "api.dicebear.com" },
       { protocol: "https", hostname: "www.transparenttextures.com" },
+      { protocol: "https", hostname: "ui-avatars.com" },
       { protocol: "https", hostname: "api.dicebear.com", pathname: "/9.x/**" },
     ],
     formats: ["image/avif", "image/webp"],

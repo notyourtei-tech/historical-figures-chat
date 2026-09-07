@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { celebrities } from "@/data/celebrities";
@@ -15,6 +16,7 @@ import {
   Download,
   Trash2,
   History,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
@@ -27,6 +29,25 @@ import { trackEvent } from "@/lib/analytics";
 import { createOfflinePersonaInterjection, parsePersonaBeats } from "@/lib/persona-dialogue";
 
 const MAX_CHAT_HISTORY_BYTES = 500_000;
+const MESSAGE_TIME_GAP_MS = 5 * 60 * 1000;
+
+const LOCALE_BY_LANGUAGE = {
+  zh: "zh-CN",
+  en: "en-US",
+  ja: "ja-JP",
+  vi: "vi-VN",
+  my: "my-MM",
+} as const;
+
+function formatConversationTime(timestamp: number, language: keyof typeof LOCALE_BY_LANGUAGE): string {
+  const date = new Date(timestamp);
+  const isToday = date.toDateString() === new Date().toDateString();
+  return new Intl.DateTimeFormat(LOCALE_BY_LANGUAGE[language], {
+    ...(isToday ? {} : { month: "short", day: "numeric" }),
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
 
 function generateId(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -105,6 +126,7 @@ export default function ChatPage() {
   const [cloudSyncEnabled, setCloudSyncEnabled] = useState(false);
   const [hasStreamingContent, setHasStreamingContent] = useState(false);
   const [interjection, setInterjection] = useState<string | null>(null);
+  const [avatarFallback, setAvatarFallback] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const greetingFetchId = useRef(0);
@@ -153,6 +175,7 @@ export default function ChatPage() {
     setCloudSyncEnabled(false);
     setHasStreamingContent(false);
     setInterjection(null);
+    setAvatarFallback(false);
     renderedMessages.current.clear();
     typewritingMessages.current.clear();
     streamingMessageIds.current.clear();
@@ -334,8 +357,9 @@ export default function ChatPage() {
     const lastMsg = messages[messages.length - 1];
     if (!lastMsg || lastMsg.role !== "assistant" || renderedMessages.current.has(lastMsg.id)) return;
     if (streamingMessageIds.current.has(lastMsg.id)) return;
+    const typewritingMessageIds = typewritingMessages.current;
     renderedMessages.current.add(lastMsg.id);
-    typewritingMessages.current.add(lastMsg.id);
+    typewritingMessageIds.add(lastMsg.id);
 
     let attempts = 0;
     const maxAttempts = 5;
@@ -352,7 +376,7 @@ export default function ChatPage() {
           retryTimer = setTimeout(tryTypewrite, 30 * attempts);
           return;
         }
-        typewritingMessages.current.delete(lastMsg.id);
+        typewritingMessageIds.delete(lastMsg.id);
         return;
       }
       const contentEl = lastEl.querySelector(".msg-content") as HTMLElement;
@@ -362,10 +386,12 @@ export default function ChatPage() {
           retryTimer = setTimeout(tryTypewrite, 30 * attempts);
           return;
         }
-        typewritingMessages.current.delete(lastMsg.id);
+        typewritingMessageIds.delete(lastMsg.id);
         return;
       }
-      const speed = window.innerWidth <= 768 ? 18 : 28;
+      // Keep the reply feeling alive without making a readable answer wait on
+      // an ornamental animation. Long replies should arrive at conversation speed.
+      const speed = window.innerWidth <= 768 ? 14 : 18;
       cleanupTypewriterRef.current = typewriterEffect(contentEl, lastMsg.content, speed);
     };
 
@@ -374,7 +400,7 @@ export default function ChatPage() {
     return () => {
       cancelled = true;
       clearTimeout(retryTimer);
-      typewritingMessages.current.delete(lastMsg.id);
+      typewritingMessageIds.delete(lastMsg.id);
       if (cleanupTypewriterRef.current) {
         cleanupTypewriterRef.current();
         cleanupTypewriterRef.current = null;
@@ -642,6 +668,9 @@ export default function ChatPage() {
   if (!celebrity) return null;
 
   const currentCelebrity = celebrity;
+  const avatarSource = avatarFallback
+    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(currentCelebrity.name.en)}&background=c0392b&color=fff&size=128`
+    : currentCelebrity.avatar;
 
   return (
     <main
@@ -658,13 +687,15 @@ export default function ChatPage() {
           >
             <ArrowLeft className="w-4 h-4 text-ink-400" aria-hidden="true" />
           </button>
-          <img
-            src={currentCelebrity.avatar}
-            loading="lazy"
-            decoding="async"
+          <Image
+            src={avatarSource}
+            width={36}
+            height={36}
+            sizes="36px"
+            unoptimized
             alt={currentCelebrity.name[language]}
             className="w-9 h-9 rounded-full border-2 border-vermilion object-cover"
-            onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentCelebrity.name.en)}&background=c0392b&color=fff&size=72`; }}
+            onError={() => setAvatarFallback(true)}
           />
           <div>
             <h1 className="text-sm font-bold text-ink-500 leading-tight">{currentCelebrity.name[language]}</h1>
@@ -704,7 +735,7 @@ export default function ChatPage() {
       {/* Chat Area */}
       <div
         ref={chatAreaRef}
-        className="page-transition flex min-h-0 flex-1 flex-col overflow-hidden"
+        className="page-transition relative flex min-h-0 flex-1 flex-col overflow-hidden"
       >
         <div
           ref={scrollRef}
@@ -716,36 +747,66 @@ export default function ChatPage() {
           aria-relevant="additions text"
           aria-label={`${currentCelebrity.name[language]} ${t("chat_history")}`}
         >
-          <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
+          <div className="max-w-3xl mx-auto px-4 py-5 md:py-6 space-y-3">
             <AnimatePresence initial={false}>
-              {messages.map((msg) => (
+              {messages.map((msg, index) => {
+                const previousMessage = messages[index - 1];
+                const startsGroup = !previousMessage || previousMessage.role !== msg.role;
+                const showTimestamp = !previousMessage || msg.timestamp - previousMessage.timestamp >= MESSAGE_TIME_GAP_MS;
+
+                return (
                 <motion.div
                   key={msg.id}
                   data-msg-id={msg.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  className="group message-entry"
                 >
-                  {msg.role === "assistant" && (
-                    <img
-                      src={currentCelebrity.avatar}
-                      loading="lazy"
-                      decoding="async"
-                      alt=""
-                      className="w-8 h-8 rounded-full border border-border object-cover mr-2 mt-1 flex-shrink-0"
-                      onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentCelebrity.name.en)}&background=c0392b&color=fff&size=64`; }}
-                    />
+                  {showTimestamp && (
+                    <time className="message-time" dateTime={new Date(msg.timestamp).toISOString()}>
+                      {formatConversationTime(msg.timestamp, language)}
+                    </time>
                   )}
-                  <div className={cn("flex flex-col", msg.role === "user" ? "items-end" : "items-start")}>
-                    <div className={cn("group relative", msg.role === "user" ? "bubble-user" : "bubble-ai")}>
-                      <div className="msg-content text-[13px] md:text-sm leading-[1.9] whitespace-pre-wrap">
-                        {typewritingMessages.current.has(msg.id) ? "" : msg.content}
+                  <div className={cn("flex", msg.role === "user" ? "justify-end" : "justify-start")}>
+                    {msg.role === "assistant" && startsGroup && (
+                      <Image
+                        src={avatarSource}
+                        width={32}
+                        height={32}
+                        sizes="32px"
+                        unoptimized
+                        loading="lazy"
+                        alt=""
+                        className="w-8 h-8 rounded-full border border-border object-cover mr-2 mt-1 flex-shrink-0"
+                        onError={() => setAvatarFallback(true)}
+                      />
+                    )}
+                    <div className={cn(
+                      "flex flex-col",
+                      msg.role === "user" ? "items-end" : "items-start",
+                      msg.role === "assistant" && !startsGroup && "ml-10"
+                    )}>
+                      <div className={cn("relative", msg.role === "user" ? "bubble-user" : "bubble-ai")}>
+                        <div className="msg-content text-[13px] md:text-sm leading-[1.9] whitespace-pre-wrap">
+                          {typewritingMessages.current.has(msg.id) ? "" : msg.content}
+                        </div>
+                        {msg.isError && !isLoading && (
+                          <button
+                            type="button"
+                            onClick={() => handleRetry(msg.id)}
+                            className="mt-2 text-[11px] text-vermilion hover:text-vermilion-hover transition-colors font-medium"
+                          >
+                            ↻ {t("retry") || "重试"}
+                          </button>
+                        )}
                       </div>
                       {!typewritingMessages.current.has(msg.id) && !msg.isError && (
-                        <div className="absolute -bottom-7 left-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity">
+                        <div className="message-actions mt-1 flex items-center gap-1" aria-label="消息操作">
                           <button
+                            type="button"
                             onClick={() => handleCopy(msg.id, msg.content)}
-                            className="p-1 rounded-md hover:bg-ink-100"
+                            className="touch-target p-1 rounded-md hover:bg-ink-100"
                             aria-label={t("copy")}
                             title={t("copy")}
                           >
@@ -758,16 +819,18 @@ export default function ChatPage() {
                           {msg.role === "assistant" && (
                             <>
                               <button
+                                type="button"
                                 onClick={() => handleFeedback(msg.id, "like")}
-                                className={cn("p-1 rounded-md hover:bg-ink-100", feedbackMap[msg.id] === "like" && "text-vermilion")}
+                                className={cn("touch-target p-1 rounded-md hover:bg-ink-100", feedbackMap[msg.id] === "like" && "text-vermilion")}
                                 aria-label={t("like")}
                                 aria-pressed={feedbackMap[msg.id] === "like"}
                               >
                                 <ThumbsUp className="w-3 h-3" />
                               </button>
                               <button
+                                type="button"
                                 onClick={() => handleFeedback(msg.id, "dislike")}
-                                className={cn("p-1 rounded-md hover:bg-ink-100", feedbackMap[msg.id] === "dislike" && "text-ink-400")}
+                                className={cn("touch-target p-1 rounded-md hover:bg-ink-100", feedbackMap[msg.id] === "dislike" && "text-ink-400")}
                                 aria-label={t("dislike")}
                                 aria-pressed={feedbackMap[msg.id] === "dislike"}
                               >
@@ -777,46 +840,24 @@ export default function ChatPage() {
                           )}
                         </div>
                       )}
-                      {msg.isError && !isLoading && (
-                        <button
-                          onClick={() => handleRetry(msg.id)}
-                          className="mt-2 text-[11px] text-vermilion hover:text-vermilion-hover transition-colors font-medium"
-                        >
-                          ↻ {t("retry") || "重试"}
-                        </button>
-                      )}
                     </div>
-                    {!typewritingMessages.current.has(msg.id) && (
-                      <span className="text-[9px] text-ink-400 mt-1 px-1">
-                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                    )}
                   </div>
                 </motion.div>
-              ))}
+                );
+              })}
             </AnimatePresence>
-
-            {/* Scroll-to-bottom button */}
-            {showScrollBtn && (
-              <button
-                onClick={scrollToBottom}
-                className="sticky bottom-3 left-1/2 -translate-x-1/2 z-10 w-9 h-9 rounded-full bg-white border border-border shadow-md flex items-center justify-center hover:bg-ink-50 transition-colors"
-                aria-label="滚动到底部"
-              >
-                <svg className="w-4 h-4 text-ink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="6,9 12,15 18,9" />
-                </svg>
-              </button>
-            )}
 
             {isLoading && !hasStreamingContent && (
               <div className="flex justify-start">
-                <img
-                  src={currentCelebrity.avatar}
+                <Image
+                  src={avatarSource}
+                  width={32}
+                  height={32}
+                  sizes="32px"
+                  unoptimized
                   alt=""
-                  decoding="async"
                   className="w-8 h-8 rounded-full border border-border object-cover mr-2 mt-1 flex-shrink-0"
-                  onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentCelebrity.name.en)}&background=c0392b&color=fff&size=64`; }}
+                  onError={() => setAvatarFallback(true)}
                 />
                 <div className="bubble-ai">
                   <div className="flex items-center gap-1.5 py-1">
@@ -832,6 +873,17 @@ export default function ChatPage() {
             )}
           </div>
         </div>
+        {showScrollBtn && (
+          <button
+            type="button"
+            onClick={scrollToBottom}
+            className="scroll-to-latest touch-target absolute bottom-4 left-1/2 z-20 flex h-10 min-h-0 w-10 min-w-0 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-white shadow-lg transition-colors hover:bg-ink-50"
+            aria-label="查看最新消息"
+            title="查看最新消息"
+          >
+            <ChevronDown className="h-4 w-4 text-ink-400" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {/* Input Area */}
@@ -846,10 +898,10 @@ export default function ChatPage() {
             <button
               type="button"
               onClick={handlePersonaInterjection}
-              className="mb-2 w-full rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-left text-xs leading-relaxed text-amber-900 transition-colors hover:bg-amber-100"
+              className="mb-2 w-full rounded-xl border border-vermilion/20 bg-white px-3 py-2 text-left text-xs leading-relaxed text-ink-500 transition-colors hover:bg-vermilion-light"
               aria-label={`让${currentCelebrity.name[language]}插话`}
             >
-              <span className="font-bold">{currentCelebrity.name[language]}似乎想插话：</span>{interjection} <span className="ml-1 underline">让他先说</span>
+              <span className="font-bold text-vermilion">{currentCelebrity.name[language]}似乎想插话：</span>{interjection} <span className="ml-1 underline underline-offset-2">让他先说</span>
             </button>
           )}
           <div className="flex items-end gap-2 bg-white border border-border rounded-xl p-2">
@@ -865,11 +917,13 @@ export default function ChatPage() {
               }}
               placeholder={t("input_placeholder")}
               aria-label={t("input_placeholder")}
+              aria-describedby="chat-composer-hint chat-composer-count"
               maxLength={2000}
               className="touch-target flex-1 bg-transparent border-none focus:ring-0 text-sm text-ink-500 placeholder:text-ink-400 resize-none max-h-[120px] py-2 leading-relaxed"
               rows={1}
             />
             <button
+              type="button"
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
               aria-label="发送消息"
@@ -881,11 +935,17 @@ export default function ChatPage() {
               <Send className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-[10px] text-ink-400 text-center mt-1.5 hidden md:block">
-            {t("input_hint")}
-          </p>
+          <div className="mt-1.5 flex min-h-4 items-center justify-center gap-2 text-[10px] text-ink-400">
+            <p id="chat-composer-hint" className="hidden md:block">{t("input_hint")}</p>
+            <p id="chat-composer-count" aria-live="polite" className={cn(input.length > 1600 ? "block" : "sr-only")}>
+              {input.length} / 2000
+            </p>
+          </div>
         </div>
       </div>
+      <p className="sr-only" role="status" aria-live="polite">
+        {copiedId ? (language === "zh" ? "消息已复制到剪贴板" : "Message copied to clipboard") : ""}
+      </p>
       <ChatHistorySidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}

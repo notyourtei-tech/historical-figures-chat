@@ -1,0 +1,23 @@
+name: Feature request
+description: Propose a user problem worth solving.
+title: "feature: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Describe the unmet need, not only the proposed interface.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed outcome
+      description: Explain what success would look like for a user.
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Privacy, safety, or accessibility considerations
+      description: Note any impact on historical accuracy, user data, content governance, or mobile use.

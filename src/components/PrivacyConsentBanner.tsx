@@ -9,7 +9,7 @@ export function PrivacyConsentBanner() {
   if (!ready || consent.completed) return null;
 
   return (
-    <aside className="fixed bottom-3 inset-x-3 md:bottom-5 md:left-1/2 md:right-auto md:-translate-x-1/2 z-[300] w-auto md:w-[min(640px,calc(100vw-2rem))] rounded-2xl border border-border bg-white/95 p-4 shadow-2xl backdrop-blur" aria-label="隐私选择">
+    <aside data-testid="privacy-consent-banner" className="privacy-consent-banner fixed inset-x-3 top-[4.5rem] z-[300] w-auto rounded-2xl border border-border bg-white/95 p-4 shadow-2xl backdrop-blur md:left-1/2 md:right-auto md:top-5 md:w-[min(640px,calc(100vw-2rem))] md:-translate-x-1/2" aria-label="隐私选择">
       <div className="flex gap-3">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-vermilion" aria-hidden="true" />
         <div className="min-w-0">

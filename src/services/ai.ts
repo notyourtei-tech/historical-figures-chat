@@ -40,51 +40,6 @@ async function callChatApi(
   }
 }
 
-const errorMsgs: Record<string, Record<Language, string>> = {
-  [ErrorCode.MISSING_API_KEY]: {
-    zh: "【系统提示】未检测到 API Key（OPENROUTER_API_KEY）。请在环境变量中配置后重启服务。可在 openrouter.ai 免费获取。",
-    en: "[System] API Key not configured (OPENROUTER_API_KEY). Set it in your environment variables and restart. Get a free key at openrouter.ai.",
-    ja: "【システム】API Key（OPENROUTER_API_KEY）が設定されていません。環境変数に設定して再起動してください。openrouter.ai で無料取得できます。",
-    vi: "[Hệ thống] Chưa cấu hình API Key (OPENROUTER_API_KEY). Hãy thiết lập trong biến môi trường và khởi động lại. Lấy key miễn phí tại openrouter.ai.",
-    my: "[စနစ်] API Key (OPENROUTER_API_KEY) မတွေ့ပါ။ ပတ်ဝန်းကျင် variable တွင် ထည့်ပြီး ပြန်စတင်ပါ။ openrouter.ai တွင် အခမဲ့ရယူနိုင်ပါသည်။"
-  },
-  [ErrorCode.API_CALL_FAILED]: {
-    zh: "AI API 请求失败，请检查网络或 API Key 配置。",
-    en: "AI API request failed. Check network or API Key.",
-    ja: "AI API リクエストに失敗しました。ネットワークまたは API Key の設定を確認してください。",
-    vi: "Yêu cầu AI API thất bại. Vui lòng kiểm tra mạng hoặc cấu hình API Key.",
-    my: "AI API တောင်းဆိုမှုမအောင်မြင်ပါ။ ကွန်ရက် သို့မဟုတ် API Key ကို စစ်ဆေးပါ။"
-  },
-  [ErrorCode.INVALID_REQUEST]: {
-    zh: "【请求错误】发送的数据格式有误，请刷新页面后重试。",
-    en: "[Request Error] The data sent was malformed. Please refresh and try again.",
-    ja: "【リクエストエラー】送信データの形式が正しくありません。更新して再度お試しください。",
-    vi: "[Lỗi yêu cầu] Dữ liệu gửi đi không đúng định dạng. Vui lòng làm mới trang.",
-    my: "[တောင်းဆိုမှုအမှား] ပို့လွှတ်သောဒေတာပုံစံမှားယွင်းပါသည်။ စာမျက်နှာကိုပြန်လည်သွားပါ။"
-  },
-  [ErrorCode.INVALID_ORIGIN]: {
-    zh: "【安全拦截】请求来源不被允许，请通过本应用页面访问。",
-    en: "[Blocked] Request origin not allowed. Please access via the app page.",
-    ja: "【ブロック】リクエスト元が許可されていません。アプリページからアクセスしてください。",
-    vi: "[Bị chặn] Nguồn yêu cầu không được phép. Vui lòng truy cập qua trang ứng dụng.",
-    my: "[ပိတ်ထားသည်] တောင်းဆိုမှုအရင်းအမြစ်ကိုခွင့်မပြုပါ။ အက်ပ်စာမျက်နှာမှတဆင့်ဝင်ရောက်ပါ။"
-  },
-  [ErrorCode.INVALID_RESPONSE]: {
-    zh: "【响应错误】API 返回了无效响应，请稍后重试。",
-    en: "[Response Error] API returned invalid response. Please try again later.",
-    ja: "【応答エラー】API から無効な応答が返されました。",
-    vi: "[Lỗi phản hồi] API trả về phản hồi không hợp lệ.",
-    my: "[တုံ့ပြန်မှုအမှား] API က မှားယွင်းတဲ့တုံ့ပြန်မှုပြန်ပေးလိုက်ပါတယ်။"
-  },
-  [ErrorCode.RATE_LIMIT]: {
-    zh: "请求过于频繁，请稍后再试。",
-    en: "Too many requests. Please try again later.",
-    ja: "リクエストが多すぎます。少し待ってから再試行してください。",
-    vi: "Quá nhiều yêu cầu. Vui lòng thử lại sau.",
-    my: "တောင်းဆိုမှုများလွန်းပါသည်။ နောက်မှ ထပ်ကြိုးစားပါ။"
-  },
-};
-
 export async function chatWithCelebrity(
   celebrity: Celebrity,
   messages: Message[],

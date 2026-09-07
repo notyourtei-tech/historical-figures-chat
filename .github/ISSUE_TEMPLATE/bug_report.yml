@@ -1,0 +1,45 @@
+name: Bug report
+description: Report a reproducible product problem without including personal data.
+title: "bug: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include passwords, API keys, private conversations, email addresses, phone numbers, screenshots with sensitive information, or security exploit details. Use the Security policy for vulnerabilities.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the user-visible issue and expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Choose …
+        3. Observe …
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where did it happen?
+      options:
+        - Desktop browser
+        - Android browser
+        - iPhone/iPad browser
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Safe evidence
+      description: Add redacted screenshots or console errors only. Remove all user content and identifiers.

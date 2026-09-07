@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, lazy, Suspense, useRef, memo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { celebrities } from "@/data/celebrities";
@@ -17,11 +18,32 @@ import { useLanguage } from "@/context/LanguageContext";
 import { countInterestMatches } from "@/lib/interest-map";
 import { getMbtiRecommendations, mbtiCompatibility, getCelebrityMbti } from "@/lib/mbti-match";
 import { translateCategory, translateEra } from "@/lib/i18n";
-import { Language } from "@/types";
+import { Celebrity, Language } from "@/types";
 import { AuthMenu } from "@/components/AuthMenu";
 
 const Onboarding = lazy(() => import("@/components/Onboarding"));
 const MBTIPanel = lazy(() => import("@/components/MBTIPanel").then(m => ({ default: m.default })));
+
+const CelebrityAvatar = memo(function CelebrityAvatar({ celebrity, size, className }: { celebrity: Celebrity; size: number; className: string }) {
+  const [fallback, setFallback] = useState(false);
+  const src = fallback
+    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(celebrity.name.en)}&background=c0392b&color=fff&size=${size * 2}`
+    : celebrity.avatar;
+
+  return (
+    <Image
+      src={src}
+      width={size}
+      height={size}
+      sizes={`${size}px`}
+      loading="lazy"
+      unoptimized
+      alt={celebrity.name.zh}
+      className={className}
+      onError={() => setFallback(true)}
+    />
+  );
+});
 
 const CelebrityCard = memo(function CelebrityCard({ celebrity, language, startChatLabel }: { celebrity: (typeof import("@/data/celebrities").celebrities)[number]; language: Language; startChatLabel: string }) {
   return (
@@ -32,14 +54,7 @@ const CelebrityCard = memo(function CelebrityCard({ celebrity, language, startCh
     >
       <div className="ink-card rounded-xl bg-white p-5 h-full flex flex-col touch-target">
         <div className="flex items-start gap-3 mb-3">
-          <img
-            src={celebrity.avatar}
-            loading="lazy"
-            decoding="async"
-            alt={celebrity.name[language]}
-            className="w-14 h-14 rounded-full border-2 border-vermilion object-cover flex-shrink-0"
-            onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(celebrity.name.en)}&background=c0392b&color=fff&size=112`; }}
-          />
+          <CelebrityAvatar celebrity={celebrity} size={56} className="w-14 h-14 rounded-full border-2 border-vermilion object-cover flex-shrink-0" />
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-bold text-ink-500 truncate">{celebrity.name[language]}</h3>
             <div className="vermilion-line" style={{ width: 24, marginTop: 4, marginBottom: 8 }} />
@@ -236,7 +251,7 @@ export default function HomePage() {
                 <Link key={c.id} href={`/chat/${c.id}`}>
                   <div className="ink-card rounded-lg p-3 bg-white touch-target">
                     <div className="flex items-center gap-2 mb-2">
-                      <img src={c.avatar} loading="lazy" alt={c.name[language]} className="w-8 h-8 rounded-full border-2 border-vermilion object-cover" onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name.en)}&background=c0392b&color=fff&size=64`; }} />
+                      <CelebrityAvatar celebrity={c} size={32} className="w-8 h-8 rounded-full border-2 border-vermilion object-cover" />
                       <div className="min-w-0">
                         <h3 className="text-sm font-bold text-ink-500 truncate">{c.name[language]}</h3>
                         <p className="text-[10px] text-ink-300">{getCelebrityMbti(c.id)}</p>

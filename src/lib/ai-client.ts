@@ -87,10 +87,10 @@ async function requestCompletion(
         messages,
         temperature: options?.temperature ?? 0.85,
         max_tokens: options?.max_tokens ?? 800,
-        // The free router can select a reasoning-capable model. A chat reply
-        // needs visible prose, not a hidden chain of thought that consumes the
-        // whole response budget; this also keeps first-token latency lower.
-        reasoning: { effort: "none", exclude: true },
+        // The free router may select a model whose internal reasoning is
+        // mandatory. Keep that reasoning out of the response, without trying
+        // to disable it (which such models correctly reject).
+        reasoning: { exclude: true },
       }),
       signal: controller.signal,
       cache: "no-store",
@@ -190,7 +190,7 @@ async function* requestCompletionStream(
         messages,
         temperature: options?.temperature ?? 0.85,
         max_tokens: options?.max_tokens ?? 800,
-        reasoning: { effort: "none", exclude: true },
+        reasoning: { exclude: true },
         stream: true,
       }),
       signal: controller.signal,

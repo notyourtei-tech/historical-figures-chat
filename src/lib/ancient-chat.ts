@@ -870,7 +870,9 @@ export async function runChat(
   try {
     const result = await callChatCompletion(aiMessages, {
       temperature: 0.85,
-      max_tokens: 600,
+      // The free router can choose a reasoning model; reserve enough output
+      // room for both its internal work and the user-visible reply.
+      max_tokens: 1600,
     });
 
     if (result?.content) {
@@ -902,23 +904,48 @@ export async function* streamChat(
     throw new Error(ErrorCode.CONFIGURATION_REQUIRED);
   }
 
+  let recoveryAttempted = false;
+  const recoverVisibleReply = async function* (): AsyncGenerator<string> {
+    // Some free providers emit reasoning-only stream events even when the
+    // non-streaming Chat Completions response has a valid final answer. Retry
+    // once through the same free-only router rather than showing a fake local
+    // persona message or leaving the user with an empty bubble.
+    recoveryAttempted = true;
+    const result = await callChatCompletion(buildChatMessages(celebrity, messages, language), {
+      temperature: 0.82,
+      max_tokens: 1600,
+    });
+    if (!result?.content) throw new Error(ErrorCode.AI_UNAVAILABLE);
+    console.log(`[AI] Recovered visible reply (${result.provider}/${result.model})`);
+    for (const part of splitForImmediateDisplay(result.content)) yield part;
+  };
+
   let received = false;
   try {
     for await (const event of streamChatCompletion(buildChatMessages(celebrity, messages, language), {
       temperature: 0.82,
-      max_tokens: 680,
+      max_tokens: 1600,
     })) {
       if (event.type === "delta" && event.content) {
         received = true;
         yield event.content;
       }
     }
-    if (!received) throw new Error(ErrorCode.AI_UNAVAILABLE);
+    if (!received) {
+      yield* recoverVisibleReply();
+    }
   } catch (error) {
-    // An online failure must stay visible. Returning a local template here
-    // makes a provider outage indistinguishable from a real AI answer.
+    // Recover only through the same online free router. A local template here
+    // would make a provider outage indistinguishable from a real AI answer.
     console.warn("[AI] Streaming failed", error instanceof Error ? error.message : "unknown");
-    if (!received) throw new Error(toAIErrorCode(error));
+    if (!received) {
+      if (recoveryAttempted) throw new Error(toAIErrorCode(error));
+      try {
+        yield* recoverVisibleReply();
+      } catch (recoveryError) {
+        throw new Error(toAIErrorCode(recoveryError));
+      }
+    }
   }
 }
 
@@ -950,7 +977,7 @@ export async function runGreeting(
         { role: "system", content: systemPrompt },
         { role: "user", content: greetingPrompt },
       ],
-      { temperature: 0.9, max_tokens: 400 }
+      { temperature: 0.9, max_tokens: 1200 }
     );
 
     if (result?.content) {

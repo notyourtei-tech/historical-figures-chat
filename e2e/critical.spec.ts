@@ -96,6 +96,61 @@ test("long chat history never pushes the composer outside the viewport", async (
   await expect(input).toBeVisible();
 });
 
+test("reading older messages never moves the page or pulls the reader back to the latest reply", async ({ page }) => {
+  await seedVisitor(page);
+  await page.addInitScript((messages) => {
+    localStorage.setItem("chat_history_confucius", JSON.stringify(messages));
+  }, createLongHistory());
+  await page.route("**/api/chat?stream=1", (route) => route.fulfill({
+    contentType: "text/event-stream",
+    body: [
+      'data: {"type":"delta","content":"这是一段新增的回复。"}',
+      'data: {"type":"complete"}',
+      "",
+    ].join("\n\n"),
+  }));
+
+  await page.goto("/chat/confucius");
+  const scrollArea = page.getByTestId("chat-scroll-area");
+  const input = page.getByRole("textbox", { name: "开启对话..." });
+  await expect(scrollArea).toBeVisible();
+
+  const before = await page.evaluate(() => {
+    const header = document.querySelector("header")?.getBoundingClientRect();
+    const composer = document.querySelector<HTMLElement>('[data-testid="chat-composer"]')?.getBoundingClientRect();
+    return { headerTop: header?.top, composerTop: composer?.top, pageTop: window.scrollY };
+  });
+
+  await scrollArea.evaluate((element) => {
+    element.scrollTop = 0;
+    element.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 1, pointerType: "touch" }));
+    element.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: 1, pointerType: "touch" }));
+  });
+  await expect.poll(() => scrollArea.evaluate((element) => element.scrollTop)).toBe(0);
+
+  await input.fill("我正在阅读前面的消息。");
+  await input.press("Enter");
+  await expect(page.getByText("这是一段新增的回复。")).toBeVisible();
+
+  await expect.poll(() => scrollArea.evaluate((element) => element.scrollTop)).toBe(0);
+  const after = await page.evaluate(() => {
+    const header = document.querySelector("header")?.getBoundingClientRect();
+    const composer = document.querySelector<HTMLElement>('[data-testid="chat-composer"]')?.getBoundingClientRect();
+    return {
+      headerTop: header?.top,
+      composerTop: composer?.top,
+      pageTop: window.scrollY,
+      chatSurface: document.documentElement.dataset.chatSurface,
+    };
+  });
+  expect(after).toMatchObject({
+    headerTop: before.headerTop,
+    composerTop: before.composerTop,
+    pageTop: before.pageTop,
+    chatSurface: "true",
+  });
+});
+
 test("first-visit privacy choice never hides the composer", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.removeItem("wan_gu_ling_xi_privacy_consent");

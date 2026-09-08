@@ -134,6 +134,10 @@ export default function ChatPage() {
   const renderedMessages = useRef<Set<string>>(new Set());
   const typewritingMessages = useRef<Set<string>>(new Set());
   const isNearBottom = useRef(true);
+  const followLatestRef = useRef(true);
+  const isScrollGestureActiveRef = useRef(false);
+  const scrollGestureTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoScrollFrame = useRef<number | null>(null);
   const initializedForId = useRef<string | null>(null);
   const activeChatIdRef = useRef<string | null>(null);
   const cloudSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -162,6 +166,12 @@ export default function ChatPage() {
     initializedForId.current = id;
     activeChatIdRef.current = id;
     chatRequestSequence.current += 1;
+    followLatestRef.current = true;
+    isScrollGestureActiveRef.current = false;
+    if (scrollGestureTimer.current) {
+      clearTimeout(scrollGestureTimer.current);
+      scrollGestureTimer.current = null;
+    }
     scheduledBeatTimers.current.forEach((timer) => clearTimeout(timer));
     scheduledBeatTimers.current = [];
     const fetchId = ++greetingFetchId.current;
@@ -284,28 +294,58 @@ export default function ChatPage() {
     return () => { if (cloudSyncTimer.current) clearTimeout(cloudSyncTimer.current); };
   }, [cloudSyncEnabled, celebrity, language, messages]);
 
-  useEffect(() => {
+  // The transcript owns its scroll position. It follows new messages only
+  // while the reader is already at the latest message, never while they are
+  // dragging through history.
+  const syncScrollState = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    if (isNearBottom.current) {
-      el.scrollTop = el.scrollHeight;
-    }
-  }, [messages, isLoading]);
-
-  // Track scroll position to know if user is near bottom
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const threshold = 120;
+    const threshold = 96;
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
     isNearBottom.current = nearBottom;
+    if (!isScrollGestureActiveRef.current) {
+      followLatestRef.current = nearBottom;
+    }
     setShowScrollBtn(!nearBottom && messages.length > 0);
   }, [messages.length]);
+
+  const beginUserScrollGesture = useCallback(() => {
+    isScrollGestureActiveRef.current = true;
+    if (scrollGestureTimer.current) clearTimeout(scrollGestureTimer.current);
+  }, []);
+
+  const endUserScrollGesture = useCallback(() => {
+    isScrollGestureActiveRef.current = false;
+    syncScrollState();
+  }, [syncScrollState]);
+
+  const handleWheel = useCallback(() => {
+    beginUserScrollGesture();
+    scrollGestureTimer.current = setTimeout(endUserScrollGesture, 180);
+  }, [beginUserScrollGesture, endUserScrollGesture]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !followLatestRef.current || isScrollGestureActiveRef.current) return;
+    const target = Math.max(0, el.scrollHeight - el.clientHeight);
+    if (Math.abs(el.scrollTop - target) < 1) return;
+
+    if (autoScrollFrame.current) cancelAnimationFrame(autoScrollFrame.current);
+    autoScrollFrame.current = requestAnimationFrame(() => {
+      if (followLatestRef.current && !isScrollGestureActiveRef.current && scrollRef.current === el) {
+        el.scrollTop = target;
+      }
+    });
+    return () => {
+      if (autoScrollFrame.current) cancelAnimationFrame(autoScrollFrame.current);
+    };
+  }, [messages, isLoading]);
 
   const scrollToBottom = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     isNearBottom.current = true;
+    followLatestRef.current = true;
     el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, []);
 
@@ -317,13 +357,24 @@ export default function ChatPage() {
   }, [input]);
 
   useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.chatSurface = "true";
+
+    let viewportFrame: number | null = null;
     const updateViewportHeight = () => {
-      const vh = window.visualViewport?.height || window.innerHeight;
-      document.documentElement.style.setProperty("--vh", `${vh}px`);
+      if (viewportFrame) cancelAnimationFrame(viewportFrame);
+      viewportFrame = requestAnimationFrame(() => {
+        const vh = window.visualViewport?.height || window.innerHeight;
+        root.style.setProperty("--vh", `${vh}px`);
+      });
     };
     updateViewportHeight();
     window.visualViewport?.addEventListener("resize", updateViewportHeight);
-    return () => window.visualViewport?.removeEventListener("resize", updateViewportHeight);
+    return () => {
+      if (viewportFrame) cancelAnimationFrame(viewportFrame);
+      window.visualViewport?.removeEventListener("resize", updateViewportHeight);
+      delete root.dataset.chatSurface;
+    };
   }, []);
 
   // Show long-wait warning after 15 seconds of loading
@@ -414,6 +465,8 @@ export default function ChatPage() {
       if (cleanupTypewriterRef.current) {
         cleanupTypewriterRef.current();
       }
+      if (scrollGestureTimer.current) clearTimeout(scrollGestureTimer.current);
+      if (autoScrollFrame.current) cancelAnimationFrame(autoScrollFrame.current);
       scheduledBeatTimers.current.forEach((timer) => clearTimeout(timer));
     };
   }, []);
@@ -681,14 +734,14 @@ export default function ChatPage() {
   return (
     <main
       id="main-content"
-      className="flex h-[var(--vh)] max-h-[var(--vh)] min-h-0 flex-col overflow-hidden bg-ink-50"
+      className="chat-atelier flex h-[var(--vh)] max-h-[var(--vh)] min-h-0 flex-col overflow-hidden"
     >
       {/* Header */}
-      <header className="h-14 md:h-16 bg-ink-50 border-b border-border flex items-center justify-between px-3 md:px-6 flex-shrink-0 z-40">
+      <header className="chat-header h-14 md:h-16 flex items-center justify-between px-3 md:px-6 flex-shrink-0 z-40">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/")}
-            className="touch-target w-10 h-10 md:w-8 md:h-8 rounded-lg bg-ink-100 flex items-center justify-center hover:bg-ink-200 transition-colors"
+            className="chat-control touch-target w-10 h-10 md:w-8 md:h-8 flex items-center justify-center"
             aria-label={t("back_to_hall")}
           >
             <ArrowLeft className="w-4 h-4 text-ink-400" aria-hidden="true" />
@@ -712,7 +765,7 @@ export default function ChatPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="touch-target w-10 h-10 md:w-8 md:h-8 rounded-lg bg-ink-100 flex items-center justify-center hover:bg-ink-200 transition-colors"
+            className="chat-control touch-target w-10 h-10 md:w-8 md:h-8 flex items-center justify-center"
             title={t("chat_history") || "History"}
             aria-label={t("chat_history") || "History"}
           >
@@ -721,7 +774,7 @@ export default function ChatPage() {
           {messages.length > 0 && (
             <button
               onClick={handleExport}
-              className="touch-target w-10 h-10 md:w-8 md:h-8 rounded-lg bg-ink-100 flex items-center justify-center hover:bg-ink-200 transition-colors"
+              className="chat-control touch-target w-10 h-10 md:w-8 md:h-8 flex items-center justify-center"
               title={t("export") || "Export"}
               aria-label={t("export") || "Export"}
             >
@@ -730,7 +783,7 @@ export default function ChatPage() {
           )}
           <button
             onClick={handleClearChat}
-            className="touch-target w-10 h-10 md:w-8 md:h-8 rounded-lg bg-ink-100 flex items-center justify-center hover:bg-ink-200 transition-colors"
+            className="chat-control touch-target w-10 h-10 md:w-8 md:h-8 flex items-center justify-center"
             title={t("clear_chat") || "Clear"}
             aria-label={t("clear_chat") || "Clear"}
           >
@@ -746,15 +799,19 @@ export default function ChatPage() {
       >
         <div
           ref={scrollRef}
-          onScroll={handleScroll}
+          onScroll={syncScrollState}
+          onPointerDown={beginUserScrollGesture}
+          onPointerUp={endUserScrollGesture}
+          onPointerCancel={endUserScrollGesture}
+          onWheel={handleWheel}
           data-testid="chat-scroll-area"
-          className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain"
+          className="chat-scroll-surface custom-scrollbar min-h-0 flex-1 overflow-y-auto"
           role="log"
           aria-live="polite"
           aria-relevant="additions text"
           aria-label={`${currentCelebrity.name[language]} ${t("chat_history")}`}
         >
-          <div className="max-w-3xl mx-auto px-4 py-5 md:py-6 space-y-3">
+          <div className="chat-transcript max-w-3xl mx-auto px-4 py-5 md:py-6 space-y-3">
             <AnimatePresence initial={false}>
               {messages.map((msg, index) => {
                 const previousMessage = messages[index - 1];
@@ -765,9 +822,9 @@ export default function ChatPage() {
                 <motion.div
                   key={msg.id}
                   data-msg-id={msg.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.14, ease: "easeOut" }}
                   className="group message-entry"
                 >
                   {showTimestamp && (
@@ -884,7 +941,7 @@ export default function ChatPage() {
           <button
             type="button"
             onClick={scrollToBottom}
-            className="scroll-to-latest touch-target absolute bottom-4 left-1/2 z-20 flex h-10 min-h-0 w-10 min-w-0 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-white shadow-lg transition-colors hover:bg-ink-50"
+            className="scroll-to-latest touch-target absolute bottom-4 left-1/2 z-20 flex h-10 min-h-0 w-10 min-w-0 -translate-x-1/2 items-center justify-center rounded-full"
             aria-label="查看最新消息"
             title="查看最新消息"
           >
@@ -911,7 +968,7 @@ export default function ChatPage() {
               <span className="font-bold text-vermilion">{currentCelebrity.name[language]}似乎想插话：</span>{interjection} <span className="ml-1 underline underline-offset-2">让他先说</span>
             </button>
           )}
-          <div className="flex items-end gap-2 bg-white border border-border rounded-xl p-2">
+          <div className="chat-composer-panel flex items-end gap-2 p-2">
             <textarea
               ref={textareaRef}
               value={input}

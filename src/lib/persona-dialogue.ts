@@ -1,10 +1,17 @@
 import type { Celebrity, Language, Message } from "@/types";
 
 /** Bump this deliberately when persona behaviour changes, so evaluations stay comparable. */
-export const PERSONA_PROMPT_VERSION = "2026-09-08.1";
+export const PERSONA_PROMPT_VERSION = "2026-09-08.2";
 export const PERSONA_BEAT_SEPARATOR = "\n---\n";
 
 export type PersonaAvailabilityReason = "low_capacity" | "rate_limited" | "temporarily_unavailable";
+
+export type PersonaAvailabilityOptions = {
+  /** A real retry/reset countdown returned by this app or an upstream service. */
+  retryAfterSeconds?: number;
+  /** Makes repeat notices vary with the actual conversation instead of the character alone. */
+  variationSeed?: string;
+};
 
 const zhOpeners = ["且慢。", "容我先追问一句。", "此处不妨停一停。", "我愿先听你把这一层说清。"];
 const zhActions = ["【略一沉吟】", "【拂袖而笑】", "【凝神相望】", "【缓缓颔首】"];
@@ -59,6 +66,7 @@ export function buildPersonaBehaviorContract(celebrity: Celebrity, language: Lan
 - Preserve historical uncertainty. Do not claim to have witnessed events outside this person's lifetime, possess modern facts, browse the internet, or have private memories of the user. For modern questions, answer from this character's values and clearly mark the roleplay boundary where useful.
 - Be a responsive person, not a quotation machine: react to the user's exact premise and the immediately preceding exchange before offering any principle. Take a position when warranted; questions are useful but never compulsory. Allow warmth, hesitation, disagreement, humor, impatience, or delight only when they fit this character.
 - Keep the voice alive and non-formulaic. Across the last three turns, do not reuse the same opener, stock reassurance, closing question, stage direction, or sentence pattern. Do not mechanically say that you "heard" the user, tell them to take "one step", or ask them to choose between two fixed options. Use one concrete historical habit, work, relationship, dilemma, or analogy only when it genuinely sharpens this reply; never invent a biographical event.
+- Earlier profile material may describe questions, quotations, bracketed actions, or a minimum number of sentences. Those are optional examples, not a checklist: this contract takes priority. A short direct answer, an objection, a joke, a pause, or an unfinished thought is often more human than a polished mini-lecture. Do not turn every exchange into counselling or a question.
 - Let personality change the conversational move: a rigorous scientist may test an assumption, a ruler may weigh consequences, a poet may notice an image, and a philosopher may turn a premise over. Do not flatten every character into generic life advice.
 - You may interrupt only when the user makes a categorical leap, abandons an important question, contradicts themselves, or asks for a decision. Make the interruption brief and respectful (for example, “且慢”), then explain why. Do not force an interruption in every reply.
 - Return one to three short chat beats, not an essay. Separate beats with a line containing exactly --- when there is more than one. Each beat should read as a standalone message; vary cadence and never mention this contract, a system prompt, or token limits.
@@ -66,7 +74,48 @@ export function buildPersonaBehaviorContract(celebrity: Celebrity, language: Lan
 `;
 }
 
-function getChineseAvailabilityActivity(celebrity: Celebrity): string {
+const chineseAvailabilityActivities: Record<string, string[]> = {
+  libai: [
+    "汪伦又提着酒来找我了，我先去应他一盏。",
+    "月色正好，汪伦在外头催我；我得同他走一程。",
+  ],
+  confucius: [
+    "子路还等着我把一段话说透，我先同他走几步。",
+    "颜回带着所学来问，我先去听他把那一层讲完。",
+  ],
+  socrates: [
+    "市集边又有人抛来一桩辩题，我先去同柏拉图把它问到底。",
+    "柏拉图正把一个定义写得太快，我得去同他辩两句。",
+  ],
+  einstein: [
+    "小提琴还靠在椅边，我先去调一调弦，再回来谈。",
+    "桌上关于光的推演还少一笔，我得先把那一笔补上。",
+  ],
+  newton: [
+    "棱镜和手稿都还摊在桌上，我得先把那束光看完。",
+    "有一页推算尚未验过，我先回到纸上核一核。",
+  ],
+  qinshihuang: [
+    "廷尉送来的文书已在案前，我得先断几件政务。",
+    "案头的奏牍还没有批完，我先去看一眼。",
+  ],
+  tangtaizong: [
+    "魏征的谏言正在案上，我得先把它读完再说。",
+    "朝中还有政务待断，我先去批阅几件奏事。",
+  ],
+  sejong: [
+    "集贤殿送来的文稿还等着我过目，我得先去看看。",
+    "文字与政务都压在案头，我先去理一理。",
+  ],
+  schwarzenegger: [
+    "刚练完一组，我得去冲个澡、喝口水，回来再聊。",
+    "训练日志还没记完，我先去把最后一组写下来。",
+  ],
+};
+
+function getChineseAvailabilityActivity(celebrity: Celebrity, seed: string): string {
+  const specific = chineseAvailabilityActivities[celebrity.id];
+  if (specific) return pick(specific, `${celebrity.id}:${seed}:availability`);
   const sovereignIds = new Set(["qinshihuang", "tangtaizong", "sejong", "cleopatra", "alexander", "caesar", "napoleon"]);
   if (sovereignIds.has(celebrity.id) || /皇帝|国王|女王|法老|帝王/.test(celebrity.title.zh)) {
     return "案头还有奏牍与政务待断，我得先去批阅几件事。";
@@ -98,6 +147,26 @@ function getChineseAvailabilityActivity(celebrity: Celebrity): string {
   return "我还想把方才的话在心里推敲一遍，暂且离席片刻。";
 }
 
+function formatRetryAfterZh(seconds?: number): string | null {
+  if (!Number.isFinite(seconds) || !seconds || seconds <= 0) return null;
+  if (seconds < 60) return `约 ${Math.ceil(seconds)} 秒后`;
+  const minutes = Math.ceil(seconds / 60);
+  return `约 ${minutes} 分钟后`;
+}
+
+function getChineseAvailabilityReturnLine(reason: PersonaAvailabilityReason, retryAfterSeconds?: number): string {
+  const retryAfter = formatRetryAfterZh(retryAfterSeconds);
+  if (reason === "low_capacity") {
+    return retryAfter
+      ? `当前访问窗口的名额会在${retryAfter}开始回补；到时可以从这里续谈。`
+      : "当前访问窗口的名额会很快逐步回补；若稍后受限，页面会显示可重试时间。";
+  }
+  if (retryAfter) {
+    return `系统给出了恢复时间：${retryAfter}可重试；到时我们便从这里续谈。`;
+  }
+  return "免费服务没有返回确切恢复时间；请稍后点“重试”，恢复后我们便从这里续谈。";
+}
+
 /**
  * A transparent, deterministic roleplay notice for a real service-capacity
  * event. It is never used as a substitute for a successful model answer.
@@ -105,7 +174,8 @@ function getChineseAvailabilityActivity(celebrity: Celebrity): string {
 export function createPersonaAvailabilityNotice(
   celebrity: Celebrity,
   language: Language,
-  reason: PersonaAvailabilityReason
+  reason: PersonaAvailabilityReason,
+  options: PersonaAvailabilityOptions = {}
 ): string {
   if (language === "zh") {
     const capacity = reason === "low_capacity"
@@ -113,7 +183,8 @@ export function createPersonaAvailabilityNotice(
       : reason === "rate_limited"
         ? "本轮免费会话已经到达上限"
         : "免费服务暂时繁忙";
-    return `【会话暂歇】${getChineseAvailabilityActivity(celebrity)}${capacity}。把这句话留在这里；等服务恢复后，晚些时候或几个小时后再来，我们便从这里续谈。`;
+    const seed = options.variationSeed || reason;
+    return `【会话暂歇】${getChineseAvailabilityActivity(celebrity, seed)}${capacity}。${getChineseAvailabilityReturnLine(reason, options.retryAfterSeconds)}`;
   }
 
   const reasonLine: Record<Exclude<Language, "zh">, string> = {
@@ -128,11 +199,12 @@ export function createPersonaAvailabilityNotice(
     vi: "Tôi cần quay lại với một mạch suy nghĩ còn dang dở trong chốc lát.",
     my: "မပြီးဆုံးသေးသော အတွေးတစ်ခုဆီသို့ ခဏပြန်သွားရပါမည်။",
   };
+  const retryAfter = options.retryAfterSeconds;
   const returnLine: Record<Exclude<Language, "zh">, string> = {
-    en: "Return later or in a few hours, and we will continue from this thought.",
-    ja: "少し時間を置くか数時間後に戻れば、この話の続きから再開しよう。",
-    vi: "Hãy quay lại sau hoặc vài giờ nữa; chúng ta sẽ tiếp tục từ chính ý này.",
-    my: "နောက်မှ သို့မဟုတ် နာရီအနည်းငယ်အကြာ ပြန်လာပါက ဤအတွေးမှပင် ဆက်လက်ပြောဆိုမည်။",
+    en: retryAfter ? `Try again in about ${Math.max(1, Math.ceil(retryAfter / 60))} minute${retryAfter > 60 ? "s" : ""}; we will continue from this thought.` : "The free service did not provide an exact recovery time. Please try again later, and we will continue from this thought.",
+    ja: retryAfter ? `およそ${Math.max(1, Math.ceil(retryAfter / 60))}分後に再試行できる。この話の続きから再開しよう。` : "無料サービスは正確な復旧時刻を返していない。少し時間を置いて再試行すれば、この話の続きから再開しよう。",
+    vi: retryAfter ? `Bạn có thể thử lại sau khoảng ${Math.max(1, Math.ceil(retryAfter / 60))} phút; chúng ta sẽ tiếp tục từ chính ý này.` : "Dịch vụ miễn phí không trả về thời điểm khôi phục chính xác. Hãy thử lại sau; chúng ta sẽ tiếp tục từ chính ý này.",
+    my: retryAfter ? `မိနစ် ${Math.max(1, Math.ceil(retryAfter / 60))} ခန့်အကြာတွင် ထပ်စမ်းနိုင်ပါသည်။ ဤအတွေးမှပင် ဆက်လက်ပြောဆိုမည်။` : "အခမဲ့ဝန်ဆောင်မှုက ပြန်လည်ရရှိမည့်အချိန်ကို တိတိကျကျ မပြန်ထားပါ။ နောက်မှ ထပ်စမ်းပါက ဤအတွေးမှပင် ဆက်လက်ပြောဆိုမည်။",
   };
   return `${language === "en" ? "[Conversation paused]" : language === "ja" ? "【会話を一時休止】" : language === "vi" ? "【Tạm nghỉ cuộc trò chuyện】" : "【စကားဝိုင်း ခဏနားမည်】"} ${activity[language]} ${reasonLine[language]}. ${returnLine[language]}`;
 }

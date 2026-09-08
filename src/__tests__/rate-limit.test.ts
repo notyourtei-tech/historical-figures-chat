@@ -27,6 +27,8 @@ describe("rateLimit", () => {
     const r3 = await rateLimit(key, 2, 60000);
     expect(r3.allowed).toBe(false);
     expect(r3.remaining).toBe(0);
+    expect(r3.resetAfterSeconds).toBeGreaterThan(0);
+    expect(r3.resetAfterSeconds).toBeLessThanOrEqual(60);
   });
 
   it("resets after window expires", async () => {

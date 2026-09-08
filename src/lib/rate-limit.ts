@@ -10,7 +10,9 @@ if (UPSTASH_URL && UPSTASH_TOKEN) {
 }
 
 // Sliding window in-memory rate limiter
-const inMemoryMap = new Map<string, { timestamps: number[] }>();
+type RateLimitResult = { allowed: boolean; remaining: number; resetAfterSeconds: number };
+
+const inMemoryMap = new Map<string, { timestamps: number[]; expiresAt: number }>();
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 let lastCleanup = Date.now();
 
@@ -19,8 +21,7 @@ function cleanupExpiredEntries() {
   if (now - lastCleanup < CLEANUP_INTERVAL_MS) return;
   lastCleanup = now;
   for (const [key, record] of inMemoryMap) {
-    record.timestamps = record.timestamps.filter((t) => t > now);
-    if (record.timestamps.length === 0) {
+    if (record.expiresAt <= now) {
       inMemoryMap.delete(key);
     }
   }
@@ -30,32 +31,35 @@ function inMemoryRateLimit(
   key: string,
   limit: number,
   windowMs: number
-): { allowed: boolean; remaining: number } {
+): RateLimitResult {
   cleanupExpiredEntries();
   const now = Date.now();
   const windowStart = now - windowMs;
 
   let record = inMemoryMap.get(key);
   if (!record) {
-    record = { timestamps: [] };
+    record = { timestamps: [], expiresAt: now + windowMs };
     inMemoryMap.set(key, record);
   }
 
   record.timestamps = record.timestamps.filter((t) => t > windowStart);
+  record.expiresAt = now + windowMs;
+
+  const getResetAfterSeconds = () => Math.max(1, Math.ceil(((record?.timestamps[0] || now) + windowMs - now) / 1000));
 
   if (record.timestamps.length >= limit) {
-    return { allowed: false, remaining: 0 };
+    return { allowed: false, remaining: 0, resetAfterSeconds: getResetAfterSeconds() };
   }
 
   record.timestamps.push(now);
-  return { allowed: true, remaining: limit - record.timestamps.length };
+  return { allowed: true, remaining: limit - record.timestamps.length, resetAfterSeconds: getResetAfterSeconds() };
 }
 
 async function redisRateLimit(
   key: string,
   limit: number,
   windowMs: number
-): Promise<{ allowed: boolean; remaining: number }> {
+): Promise<RateLimitResult> {
   const now = Date.now();
   const windowKey = `rl:${key}:${Math.floor(now / windowMs)}`;
   const count = await redis!.incr(windowKey);
@@ -65,14 +69,16 @@ async function redisRateLimit(
   }
 
   const remaining = Math.max(0, limit - count);
-  return { allowed: count <= limit, remaining };
+  const ttl = await redis!.pttl(windowKey);
+  const resetAfterSeconds = Math.max(1, Math.ceil((ttl > 0 ? ttl : windowMs) / 1000));
+  return { allowed: count <= limit, remaining, resetAfterSeconds };
 }
 
 export async function rateLimit(
   key: string,
   limit: number = 20,
   windowMs: number = 60000
-): Promise<{ allowed: boolean; remaining: number }> {
+): Promise<RateLimitResult> {
   if (redis) {
     try {
       return await redisRateLimit(key, limit, windowMs);

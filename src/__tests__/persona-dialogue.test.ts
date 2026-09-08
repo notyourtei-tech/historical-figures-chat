@@ -33,11 +33,15 @@ describe("local historical persona dialogue", () => {
   it("uses a transparent, role-specific pause notice when free capacity is low", () => {
     const qin = celebrities.find((celebrity) => celebrity.id === "qinshihuang");
     const einstein = celebrities.find((celebrity) => celebrity.id === "einstein");
+    const liBai = celebrities.find((celebrity) => celebrity.id === "libai");
 
     expect(qin).toBeDefined();
     expect(einstein).toBeDefined();
-    expect(createPersonaAvailabilityNotice(qin!, "zh", "rate_limited")).toMatch(/会话暂歇|奏牍|政务|批阅/);
-    expect(createPersonaAvailabilityNotice(einstein!, "zh", "low_capacity")).toMatch(/会话暂歇|实验台|推演|服务恢复/);
+    expect(liBai).toBeDefined();
+    expect(createPersonaAvailabilityNotice(qin!, "zh", "rate_limited", { retryAfterSeconds: 43 })).toMatch(/会话暂歇|奏牍|政务|批阅/);
+    expect(createPersonaAvailabilityNotice(qin!, "zh", "rate_limited", { retryAfterSeconds: 43 })).toContain("43 秒后");
+    expect(createPersonaAvailabilityNotice(einstein!, "zh", "low_capacity", { retryAfterSeconds: 60 })).toMatch(/会话暂歇|小提琴|实验台|推演/);
+    expect(createPersonaAvailabilityNotice(liBai!, "zh", "rate_limited", { variationSeed: "wang-lun" })).toMatch(/汪伦|月色/);
   });
 
   it("tells the online model to vary voice and avoid generic advice templates", () => {

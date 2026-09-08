@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { allowed, remaining } = await rateLimit(ip, CHAT_REQUEST_LIMIT, CHAT_REQUEST_WINDOW_MS);
+    const { allowed, remaining, resetAfterSeconds } = await rateLimit(ip, CHAT_REQUEST_LIMIT, CHAT_REQUEST_WINDOW_MS);
     if (!allowed) {
       logSecurityEvent({ type: "RATE_LIMIT", ip, path: "/api/chat" });
       return NextResponse.json(
@@ -77,9 +77,10 @@ export async function POST(req: NextRequest) {
         {
           status: 429,
           headers: {
-            "Retry-After": "60",
+            "Retry-After": String(resetAfterSeconds),
             "X-RateLimit-Limit": String(CHAT_REQUEST_LIMIT),
             "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset-After": String(resetAfterSeconds),
           },
         }
       );
@@ -169,6 +170,7 @@ export async function POST(req: NextRequest) {
           "X-Accel-Buffering": "no",
           "X-RateLimit-Limit": String(CHAT_REQUEST_LIMIT),
           "X-RateLimit-Remaining": String(remaining),
+          "X-RateLimit-Reset-After": String(resetAfterSeconds),
         },
       });
     }
@@ -178,6 +180,7 @@ export async function POST(req: NextRequest) {
       headers: {
         "X-RateLimit-Limit": String(CHAT_REQUEST_LIMIT),
         "X-RateLimit-Remaining": String(remaining),
+        "X-RateLimit-Reset-After": String(resetAfterSeconds),
       },
     });
   } catch (error: unknown) {

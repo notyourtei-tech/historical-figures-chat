@@ -520,13 +520,19 @@ export default function ChatPage() {
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes(ErrorCode.RATE_LIMIT) || errorMessage.includes("rate limit")) {
       return {
-        content: createPersonaAvailabilityNotice(activeCelebrity, language, "rate_limited"),
+        content: createPersonaAvailabilityNotice(activeCelebrity, language, "rate_limited", {
+          retryAfterSeconds: error instanceof ChatApiError ? error.retryAfterSeconds : undefined,
+          variationSeed: errorMessage,
+        }),
         availability: "service_paused",
       };
     }
     if (errorMessage.includes(ErrorCode.AI_UNAVAILABLE)) {
       return {
-        content: createPersonaAvailabilityNotice(activeCelebrity, language, "temporarily_unavailable"),
+        content: createPersonaAvailabilityNotice(activeCelebrity, language, "temporarily_unavailable", {
+          retryAfterSeconds: error instanceof ChatApiError ? error.retryAfterSeconds : undefined,
+          variationSeed: errorMessage,
+        }),
         availability: "service_paused",
       };
     }
@@ -620,7 +626,10 @@ export default function ChatPage() {
           setMessages((prev) => [...prev, {
             id: generateId(),
             role: "assistant",
-            content: createPersonaAvailabilityNotice(celebrity, language, "low_capacity"),
+            content: createPersonaAvailabilityNotice(celebrity, language, "low_capacity", {
+              retryAfterSeconds: requestMeta.capacity?.resetAfterSeconds,
+              variationSeed: `${requestSequence}:${content}`,
+            }),
             timestamp: Date.now(),
             availability: "low_capacity",
           }]);

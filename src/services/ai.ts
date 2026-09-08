@@ -5,12 +5,14 @@ type ChatApiResult = {
   success: boolean;
   content?: string;
   error?: string;
+  retryAfterSeconds?: number;
 };
 
 export type ChatCapacity = {
   remaining: number;
   limit: number;
   isLow: boolean;
+  resetAfterSeconds?: number;
 };
 
 // A warning leaves two requests in the current 20-request visitor window.
@@ -21,14 +23,26 @@ export const LOW_CHAT_CAPACITY_RATIO = 0.1;
 function getChatCapacity(response: Response): ChatCapacity | null {
   const remaining = Number(response.headers.get("X-RateLimit-Remaining"));
   const limit = Number(response.headers.get("X-RateLimit-Limit"));
+  const resetAfterSeconds = Number(response.headers.get("X-RateLimit-Reset-After"));
   if (!Number.isFinite(remaining) || !Number.isFinite(limit) || limit <= 0 || remaining < 0) return null;
-  return { remaining, limit, isLow: remaining / limit <= LOW_CHAT_CAPACITY_RATIO };
+  return {
+    remaining,
+    limit,
+    isLow: remaining / limit <= LOW_CHAT_CAPACITY_RATIO,
+    ...(Number.isFinite(resetAfterSeconds) && resetAfterSeconds > 0 ? { resetAfterSeconds } : {}),
+  };
+}
+
+function getRetryAfterSeconds(response: Response): number | undefined {
+  const value = Number(response.headers.get("Retry-After"));
+  return Number.isFinite(value) && value > 0 ? value : undefined;
 }
 
 export class ChatApiError extends Error {
   constructor(
     public readonly code: string,
-    public readonly detail?: string
+    public readonly detail?: string,
+    public readonly retryAfterSeconds?: number
   ) {
     super(detail ? `${code}: ${detail}` : code);
     this.name = "ChatApiError";
@@ -46,13 +60,14 @@ async function callChatApi(
   });
 
   const raw = await response.text();
+  const retryAfterSeconds = getRetryAfterSeconds(response);
 
   try {
     const data = JSON.parse(raw) as ChatApiResult;
     if (!response.ok && !data.error) {
       return { success: false, error: ErrorCode.SERVER_ERROR, content: `HTTP ${response.status}` };
     }
-    return data;
+    return { ...data, ...(retryAfterSeconds ? { retryAfterSeconds } : {}) };
   } catch {
     return { success: false, error: ErrorCode.INVALID_RESPONSE, content: raw };
   }
@@ -69,7 +84,7 @@ export async function chatWithCelebrity(
     return result.content;
   }
 
-  throw new ChatApiError(result.error || ErrorCode.API_CALL_FAILED, result.content);
+  throw new ChatApiError(result.error || ErrorCode.API_CALL_FAILED, result.content, result.retryAfterSeconds);
 }
 
 type StreamPayload = {
@@ -107,7 +122,7 @@ export async function streamChatWithCelebrity(
         onDelta(data.content);
         return data.content;
       }
-      throw new ChatApiError(data.error || ErrorCode.API_CALL_FAILED, data.content);
+      throw new ChatApiError(data.error || ErrorCode.API_CALL_FAILED, data.content, getRetryAfterSeconds(response));
     } catch (error) {
       if (error instanceof ChatApiError) throw error;
       throw new ChatApiError(ErrorCode.INVALID_RESPONSE, raw);
@@ -115,7 +130,7 @@ export async function streamChatWithCelebrity(
   }
 
   if (!response.ok || !response.body) {
-    throw new ChatApiError(ErrorCode.SERVER_ERROR, `HTTP ${response.status}`);
+    throw new ChatApiError(ErrorCode.SERVER_ERROR, `HTTP ${response.status}`, getRetryAfterSeconds(response));
   }
 
   const reader = response.body.getReader();
@@ -133,7 +148,10 @@ export async function streamChatWithCelebrity(
         onDelta(payload.content);
       }
       if (payload.type === "error") {
-        throw new ChatApiError(payload.error || ErrorCode.SERVER_ERROR);
+        // A stream can remain HTTP 200 even when the provider rejects work
+        // mid-stream. Preserve the route's real Retry-After header so the UI
+        // never invents a recovery time.
+        throw new ChatApiError(payload.error || ErrorCode.SERVER_ERROR, undefined, getRetryAfterSeconds(response));
       }
     } catch (error) {
       if (error instanceof ChatApiError) throw error;

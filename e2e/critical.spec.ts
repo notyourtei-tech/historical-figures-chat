@@ -59,6 +59,7 @@ test("a real free-service limit becomes a character-specific pause with a retry 
   await page.route("**/api/greeting", (route) => route.fulfill({ json: { success: true, content: "【抬眼】说吧。" } }));
   await page.route("**/api/chat?stream=1", (route) => route.fulfill({
     contentType: "text/event-stream",
+    headers: { "Retry-After": "43" },
     body: 'data: {"type":"error","error":"RATE_LIMIT_EXCEEDED"}\n\n',
   }));
 
@@ -70,6 +71,7 @@ test("a real free-service limit becomes a character-specific pause with a retry 
 
   await expect(page.getByText(/会话暂歇/)).toBeVisible();
   await expect(page.getByText(/奏牍|政务|批阅/)).toBeVisible();
+  await expect(page.getByText(/43 秒后可重试/)).toBeVisible();
   await expect(page.getByRole("button", { name: /重试/ })).toBeVisible();
   await expect.poll(() => page.evaluate(() => localStorage.getItem("chat_history_qinshihuang") || "")).toContain("我想继续问治国的事。");
 });
@@ -79,7 +81,7 @@ test("a low visitor capacity warning arrives after a complete character reply", 
   await page.route("**/api/greeting", (route) => route.fulfill({ json: { success: true, content: "【微笑】我们开始吧。" } }));
   await page.route("**/api/chat?stream=1", (route) => route.fulfill({
     contentType: "text/event-stream",
-    headers: { "X-RateLimit-Limit": "20", "X-RateLimit-Remaining": "2" },
+    headers: { "X-RateLimit-Limit": "20", "X-RateLimit-Remaining": "2", "X-RateLimit-Reset-After": "31" },
     body: [
       'data: {"type":"delta","content":"先把假设写下来，再检验它。"}',
       'data: {"type":"complete"}',
@@ -95,7 +97,8 @@ test("a low visitor capacity warning arrives after a complete character reply", 
 
   await expect(page.getByText("先把假设写下来，再检验它。")).toBeVisible();
   await expect(page.getByText(/本轮免费会话的余量已经很低/)).toBeVisible();
-  await expect(page.getByText(/实验台|推演/)).toBeVisible();
+  await expect(page.getByText(/小提琴|实验台|推演/)).toBeVisible();
+  await expect(page.getByText(/31 秒后开始回补/)).toBeVisible();
 });
 
 test("long chat history never pushes the composer outside the viewport", async ({ page }) => {

@@ -87,14 +87,14 @@ npm run dev
 | 变量 | 用途 | 默认行为 |
 | --- | --- | --- |
 | `HISTORICAL_CHAT_MODE` | `offline` 或显式 `online` | `offline`，不调用第三方模型服务 |
-| `OPENROUTER_API_KEY` | 可选的在线模型增强 | 未配置时回退到本地人物引擎 |
+| `OPENROUTER_API_KEY` | 可选的在线模型增强 | `online` 时仅请求 `openrouter/free`；不会自动使用付费模型 |
 | `NEXT_PUBLIC_APP_URL` | 公开应用 URL，用于外部模型 Referer 与站点元数据 | 本地开发 URL / 已部署默认 URL |
 | `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | 浏览器侧 Supabase 配置 | 不启用云端登录与会话同步 |
 | `SUPABASE_SERVICE_ROLE_KEY` | 仅服务端的受控账户操作 | 必须保密，绝不加 `NEXT_PUBLIC_` 前缀 |
 | `UPSTASH_REDIS_REST_URL`、`UPSTASH_REDIS_REST_TOKEN` | 生产环境分布式限流 | 使用内存级退化策略 |
 | `SENTRY_DSN`、`NEXT_PUBLIC_SENTRY_DSN` | 隐私化错误监控 | 不上报到 Sentry |
 
-关于 Google、邮箱、短信、Supabase 和模型服务的成本及安全边界，请先阅读 [生产配置清单](docs/production-setup.md)。免费套餐可能改变，项目不会将任何第三方免费额度描述为永久承诺。
+关于 Google、邮箱、短信、Supabase 和模型服务的成本及安全边界，请先阅读 [生产配置清单](docs/production-setup.md)。在线模型仅请求 OpenRouter 的免费路由；免费模型的额度和可用性由服务商决定，项目不会将任何第三方免费额度描述为永久承诺。
 
 ## 质量门禁
 

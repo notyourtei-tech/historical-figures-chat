@@ -21,6 +21,7 @@ const PLACEHOLDER_KEYS = new Set([
 ]);
 
 const REQUEST_TIMEOUT_MS = 55_000;
+const OPENROUTER_FREE_ROUTER = "openrouter/free";
 
 function isValidKey(key?: string): key is string {
   return !!key && !PLACEHOLDER_KEYS.has(key.trim());
@@ -37,21 +38,16 @@ interface ProviderSpec {
 function getProviderSpecs(): ProviderSpec[] {
   const providers: ProviderSpec[] = [];
 
-  // 只保留 OpenRouter
+  // The OpenRouter free router only dispatches to models currently offered at
+  // the free tier. Keeping this as the sole model prevents an accidental paid
+  // fallback when the provider changes its model catalogue.
   const openrouterKey = process.env.OPENROUTER_API_KEY;
   if (isValidKey(openrouterKey)) {
     providers.push({
       name: "openrouter",
       apiKey: openrouterKey,
       baseURL: "https://openrouter.ai/api/v1",
-      models: [
-        "google/gemma-4-31b-it:free",
-        "nvidia/nemotron-3-super-120b-a12b:free",
-        "tencent/hy3:free",
-        "qwen/qwen3-coder:free",
-        "meta-llama/llama-3.3-70b-instruct:free",
-        "openai/gpt-oss-120b:free",
-      ],
+      models: [OPENROUTER_FREE_ROUTER],
       headers: {
         "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
         "X-Title": "Ancient-Wisdom-Chat",
@@ -107,6 +103,7 @@ async function requestCompletion(
     }
 
     const data = JSON.parse(raw) as {
+      model?: string;
       choices?: Array<{ message?: { content?: string } }>;
     };
     const content = data.choices?.[0]?.message?.content?.trim();
@@ -115,7 +112,7 @@ async function requestCompletion(
       throw new Error("AI_EMPTY_RESPONSE");
     }
 
-    return { content, provider: provider.name, model };
+    return { content, provider: provider.name, model: data.model || model };
   } catch (error: unknown) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error(`REQUEST_TIMEOUT: ${provider.name}/${model}`);
@@ -206,11 +203,13 @@ async function* requestCompletionStream(
     let buffer = "";
     let receivedContent = false;
 
+    let resolvedModel = model;
     const consumeLine = (line: string): string | null => {
       const payload = line.startsWith("data:") ? line.slice(5).trim() : "";
       if (!payload || payload === "[DONE]") return null;
       try {
-        const parsed = JSON.parse(payload) as { choices?: Array<{ delta?: { content?: string } }> };
+        const parsed = JSON.parse(payload) as { model?: string; choices?: Array<{ delta?: { content?: string } }> };
+        if (parsed.model) resolvedModel = parsed.model;
         return parsed.choices?.[0]?.delta?.content || null;
       } catch {
         return null;
@@ -226,14 +225,14 @@ async function* requestCompletionStream(
         const content = consumeLine(line);
         if (content) {
           receivedContent = true;
-          yield { type: "delta", content, provider: provider.name, model };
+          yield { type: "delta", content, provider: provider.name, model: resolvedModel };
         }
       }
       if (done) break;
     }
 
     if (!receivedContent) throw new Error("AI_EMPTY_RESPONSE");
-    yield { type: "complete", provider: provider.name, model };
+    yield { type: "complete", provider: provider.name, model: resolvedModel };
   } catch (error: unknown) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new Error(`REQUEST_TIMEOUT: ${provider.name}/${model}`);

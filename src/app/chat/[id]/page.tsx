@@ -535,6 +535,9 @@ export default function ChatPage() {
       if (errorMessage.includes(ErrorCode.RATE_LIMIT) || errorMessage.includes("rate limit")) {
         userFriendlyMessage = t("error_rate_limit");
       }
+      if (errorMessage.includes(ErrorCode.AI_UNAVAILABLE) || errorMessage.includes(ErrorCode.CONFIGURATION_REQUIRED)) {
+        userFriendlyMessage = t("error_ai_unavailable");
+      }
       if (errorMessage.includes(ErrorCode.CONTENT_POLICY)) {
         userFriendlyMessage = error instanceof ChatApiError && error.detail
           ? error.detail
@@ -587,6 +590,9 @@ export default function ChatPage() {
       let userFriendlyMessage = t("error_ai_failed");
       if (errMsg.includes(ErrorCode.RATE_LIMIT) || errMsg.includes("rate limit")) {
         userFriendlyMessage = t("error_rate_limit");
+      }
+      if (errMsg.includes(ErrorCode.AI_UNAVAILABLE) || errMsg.includes(ErrorCode.CONFIGURATION_REQUIRED)) {
+        userFriendlyMessage = t("error_ai_unavailable");
       }
       if (errMsg.includes(ErrorCode.CONTENT_POLICY)) {
         userFriendlyMessage = error instanceof ChatApiError && error.detail

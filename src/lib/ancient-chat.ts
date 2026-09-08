@@ -1,5 +1,6 @@
 import { Celebrity, Message, Language } from "@/types";
 import { callChatCompletion, getAIProviders, streamChatCompletion, type ChatMessage } from "@/lib/ai-client";
+import { ErrorCode } from "@/lib/errors";
 import {
   buildPersonaBehaviorContract,
   compactConversation,
@@ -821,6 +822,11 @@ function shouldUseOnlineModel(): boolean {
   return process.env.HISTORICAL_CHAT_MODE === "online";
 }
 
+function toAIErrorCode(error: unknown): ErrorCode {
+  const detail = error instanceof Error ? error.message : String(error);
+  return detail.includes(ErrorCode.RATE_LIMIT) ? ErrorCode.RATE_LIMIT : ErrorCode.AI_UNAVAILABLE;
+}
+
 function buildChatMessages(celebrity: Celebrity, messages: Message[], language: Language): ChatMessage[] {
   return [
     { role: "system", content: buildSystemPrompt(celebrity, language) },
@@ -851,8 +857,12 @@ export async function runChat(
   messages: Message[],
   language: Language = "zh"
 ): Promise<{ success: boolean; content?: string; error?: string }> {
-  if (!shouldUseOnlineModel() || getAIProviders().length === 0) {
+  if (!shouldUseOnlineModel()) {
     return { success: true, content: createOfflinePersonaReply(celebrity, messages, language) };
+  }
+
+  if (getAIProviders().length === 0) {
+    return { success: false, error: ErrorCode.CONFIGURATION_REQUIRED };
   }
 
   const aiMessages = buildChatMessages(celebrity, messages, language);
@@ -868,11 +878,11 @@ export async function runChat(
       return { success: true, content: result.content };
     }
 
-    return { success: true, content: createOfflinePersonaReply(celebrity, messages, language) };
+    return { success: false, error: ErrorCode.AI_UNAVAILABLE };
   } catch (apiError: unknown) {
     const detail = apiError instanceof Error ? apiError.message : String(apiError);
     console.error("[AI] Request failed:", detail);
-    return { success: true, content: createOfflinePersonaReply(celebrity, messages, language) };
+    return { success: false, error: toAIErrorCode(apiError) };
   }
 }
 
@@ -881,12 +891,15 @@ export async function* streamChat(
   messages: Message[],
   language: Language = "zh"
 ): AsyncGenerator<string> {
-  const fallback = createOfflinePersonaReply(celebrity, messages, language);
-  if (!shouldUseOnlineModel() || getAIProviders().length === 0) {
+  if (!shouldUseOnlineModel()) {
     // Yield in small, readable chunks so the UI feels immediate even in the
     // zero-cost local mode. This path never sends message content off-device.
-    for (const part of splitForImmediateDisplay(fallback)) yield part;
+    for (const part of splitForImmediateDisplay(createOfflinePersonaReply(celebrity, messages, language))) yield part;
     return;
+  }
+
+  if (getAIProviders().length === 0) {
+    throw new Error(ErrorCode.CONFIGURATION_REQUIRED);
   }
 
   let received = false;
@@ -900,12 +913,12 @@ export async function* streamChat(
         yield event.content;
       }
     }
-    if (!received) yield fallback;
+    if (!received) throw new Error(ErrorCode.AI_UNAVAILABLE);
   } catch (error) {
-    // Optional online services are intentionally non-critical. Fall back to
-    // the local experience rather than exposing provider configuration errors.
-    console.warn("[AI] Streaming failed; using local persona fallback", error instanceof Error ? error.message : "unknown");
-    if (!received) yield fallback;
+    // An online failure must stay visible. Returning a local template here
+    // makes a provider outage indistinguishable from a real AI answer.
+    console.warn("[AI] Streaming failed", error instanceof Error ? error.message : "unknown");
+    if (!received) throw new Error(toAIErrorCode(error));
   }
 }
 
@@ -913,8 +926,12 @@ export async function runGreeting(
   celebrity: Celebrity,
   language: Language = "zh"
 ): Promise<{ success: boolean; content?: string; error?: string }> {
-  if (!shouldUseOnlineModel() || getAIProviders().length === 0) {
+  if (!shouldUseOnlineModel()) {
     return { success: true, content: createOfflinePersonaGreeting(celebrity, language) };
+  }
+
+  if (getAIProviders().length === 0) {
+    return { success: false, error: ErrorCode.CONFIGURATION_REQUIRED };
   }
 
   const systemPrompt = buildSystemPrompt(celebrity, language);
@@ -940,9 +957,8 @@ export async function runGreeting(
       return { success: true, content: result.content };
     }
 
-    return { success: false, error: "API_CALL_FAILED" };
+    return { success: false, error: ErrorCode.AI_UNAVAILABLE };
   } catch (error: unknown) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return { success: false, error: "API_CALL_FAILED", content: detail };
+    return { success: false, error: toAIErrorCode(error) };
   }
 }

@@ -5,7 +5,12 @@ export const dynamic = "force-dynamic";
 
 export function GET() {
   const authConfigured = Boolean(getSupabasePublicConfig());
-  const aiConfigured = Boolean(process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY || process.env.DEEPSEEK_API_KEY);
+  // The chat client deliberately supports OpenRouter only. Use the exact same
+  // key here so the operational status cannot report a false positive.
+  const aiConfigured = Boolean(process.env.OPENROUTER_API_KEY);
+  const aiMode = process.env.HISTORICAL_CHAT_MODE === "online"
+    ? (aiConfigured ? "online" : "misconfigured")
+    : "offline";
   return NextResponse.json(
     {
       status: "ok",
@@ -13,7 +18,7 @@ export function GET() {
       checks: {
         web: "ok",
         auth: authConfigured ? "configured" : "not_configured",
-        ai: aiConfigured ? "configured" : "not_configured",
+        ai: aiMode,
       },
     },
     { headers: { "Cache-Control": "no-store" } }

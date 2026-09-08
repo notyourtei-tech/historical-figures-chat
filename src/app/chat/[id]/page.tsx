@@ -20,13 +20,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
-import { ChatApiError, chatWithCelebrity, getInitialGreeting, streamChatWithCelebrity } from "@/services/ai";
+import { ChatApiError, chatWithCelebrity, getInitialGreeting, streamChatWithCelebrity, type ChatCapacity } from "@/services/ai";
 import { translateEra } from "@/lib/i18n";
 import { ErrorCode } from "@/lib/errors";
 import ChatHistorySidebar, { updateConversationMeta } from "@/components/ChatHistorySidebar";
 import { usePrivacy } from "@/context/PrivacyContext";
 import { trackEvent } from "@/lib/analytics";
-import { createOfflinePersonaInterjection, parsePersonaBeats } from "@/lib/persona-dialogue";
+import { createOfflinePersonaInterjection, createPersonaAvailabilityNotice, parsePersonaBeats } from "@/lib/persona-dialogue";
 
 const MAX_CHAT_HISTORY_BYTES = 500_000;
 const MESSAGE_TIME_GAP_MS = 5 * 60 * 1000;
@@ -144,6 +144,7 @@ export default function ChatPage() {
   const streamingMessageIds = useRef<Set<string>>(new Set());
   const scheduledBeatTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const chatRequestSequence = useRef(0);
+  const lowCapacityWarningSent = useRef(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -168,6 +169,7 @@ export default function ChatPage() {
     chatRequestSequence.current += 1;
     followLatestRef.current = true;
     isScrollGestureActiveRef.current = false;
+    lowCapacityWarningSent.current = false;
     if (scrollGestureTimer.current) {
       clearTimeout(scrollGestureTimer.current);
       scrollGestureTimer.current = null;
@@ -514,6 +516,34 @@ export default function ChatPage() {
       });
   }, [celebrity, t, language, cloudSyncEnabled, consent.aiProcessing]);
 
+  const getFailureMessage = useCallback((error: unknown, activeCelebrity: Celebrity): Pick<Message, "content" | "availability"> => {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes(ErrorCode.RATE_LIMIT) || errorMessage.includes("rate limit")) {
+      return {
+        content: createPersonaAvailabilityNotice(activeCelebrity, language, "rate_limited"),
+        availability: "service_paused",
+      };
+    }
+    if (errorMessage.includes(ErrorCode.AI_UNAVAILABLE)) {
+      return {
+        content: createPersonaAvailabilityNotice(activeCelebrity, language, "temporarily_unavailable"),
+        availability: "service_paused",
+      };
+    }
+    if (errorMessage.includes(ErrorCode.CONTENT_POLICY)) {
+      trackEvent("content_policy_triggered", { action: "block" });
+      return {
+        content: error instanceof ChatApiError && error.detail
+          ? error.detail
+          : (language === "zh" ? "这条内容无法由应用继续处理。" : "This content cannot be processed here."),
+      };
+    }
+    if (errorMessage.includes(ErrorCode.CONFIGURATION_REQUIRED)) {
+      return { content: t("error_ai_unavailable") };
+    }
+    return { content: t("error_ai_failed") };
+  }, [language, t]);
+
   const handleSend = useCallback(async () => {
     const content = input.trim();
     if (!content || !celebrity || isLoading) return;
@@ -558,11 +588,14 @@ export default function ChatPage() {
     try {
       const allMessages = [...previousMessages, userMessage];
       let received = "";
+      const requestMeta: { capacity: ChatCapacity | null } = { capacity: null };
       const response = await streamChatWithCelebrity(celebrity, allMessages, language, (delta) => {
         if (activeChatIdRef.current !== requestChatId || chatRequestSequence.current !== requestSequence) return;
         received += delta;
         setHasStreamingContent(true);
         setMessages((prev) => prev.map((message) => message.id === streamingMessageId ? { ...message, content: received } : message));
+      }, (capacity) => {
+        requestMeta.capacity = capacity;
       });
       if (activeChatIdRef.current !== requestChatId || chatRequestSequence.current !== requestSequence) return;
 
@@ -580,27 +613,30 @@ export default function ChatPage() {
         }, 480 * (index + 1));
         scheduledBeatTimers.current.push(timer);
       });
+      if (requestMeta.capacity?.isLow && !lowCapacityWarningSent.current) {
+        lowCapacityWarningSent.current = true;
+        const timer = setTimeout(() => {
+          if (activeChatIdRef.current !== requestChatId || chatRequestSequence.current !== requestSequence) return;
+          setMessages((prev) => [...prev, {
+            id: generateId(),
+            role: "assistant",
+            content: createPersonaAvailabilityNotice(celebrity, language, "low_capacity"),
+            timestamp: Date.now(),
+            availability: "low_capacity",
+          }]);
+        }, 480 * (laterBeats.length + 1));
+        scheduledBeatTimers.current.push(timer);
+      } else if (!requestMeta.capacity?.isLow) {
+        lowCapacityWarningSent.current = false;
+      }
     } catch (error) {
       if (activeChatIdRef.current !== requestChatId || chatRequestSequence.current !== requestSequence) return;
       console.error(error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      let userFriendlyMessage = t("error_ai_failed");
-      if (errorMessage.includes(ErrorCode.RATE_LIMIT) || errorMessage.includes("rate limit")) {
-        userFriendlyMessage = t("error_rate_limit");
-      }
-      if (errorMessage.includes(ErrorCode.AI_UNAVAILABLE) || errorMessage.includes(ErrorCode.CONFIGURATION_REQUIRED)) {
-        userFriendlyMessage = t("error_ai_unavailable");
-      }
-      if (errorMessage.includes(ErrorCode.CONTENT_POLICY)) {
-        userFriendlyMessage = error instanceof ChatApiError && error.detail
-          ? error.detail
-          : (language === "zh" ? "这条内容无法由应用继续处理。" : "This content cannot be processed here.");
-        trackEvent("content_policy_triggered", { action: "block" });
-      }
+      const failure = getFailureMessage(error, celebrity);
       streamingMessageIds.current.delete(streamingMessageId);
       setMessages((prev) => [
         ...prev.filter((message) => message.id !== streamingMessageId),
-        { id: generateId(), role: "assistant", content: userFriendlyMessage, timestamp: Date.now(), isError: true },
+        { id: generateId(), role: "assistant", content: failure.content, timestamp: Date.now(), isError: true, availability: failure.availability },
       ]);
     } finally {
       if (activeChatIdRef.current === requestChatId && chatRequestSequence.current === requestSequence) {
@@ -608,7 +644,7 @@ export default function ChatPage() {
         setHasStreamingContent(false);
       }
     }
-  }, [input, celebrity, isLoading, language, t, privacyReady, consent.aiProcessing]);
+  }, [input, celebrity, isLoading, language, privacyReady, consent.aiProcessing, getFailureMessage]);
 
   const handleRetry = useCallback(async (errorMessageId: string) => {
     if (!celebrity || isLoading) return;
@@ -639,27 +675,15 @@ export default function ChatPage() {
     } catch (error) {
       if (activeChatIdRef.current !== requestChatId) return;
       console.error(error);
-      const errMsg = error instanceof Error ? error.message : String(error);
-      let userFriendlyMessage = t("error_ai_failed");
-      if (errMsg.includes(ErrorCode.RATE_LIMIT) || errMsg.includes("rate limit")) {
-        userFriendlyMessage = t("error_rate_limit");
-      }
-      if (errMsg.includes(ErrorCode.AI_UNAVAILABLE) || errMsg.includes(ErrorCode.CONFIGURATION_REQUIRED)) {
-        userFriendlyMessage = t("error_ai_unavailable");
-      }
-      if (errMsg.includes(ErrorCode.CONTENT_POLICY)) {
-        userFriendlyMessage = error instanceof ChatApiError && error.detail
-          ? error.detail
-          : (language === "zh" ? "这条内容无法由应用继续处理。" : "This content cannot be processed here.");
-      }
+      const failure = getFailureMessage(error, celebrity);
       setMessages((prev) => [
         ...prev,
-        { id: generateId(), role: "assistant", content: userFriendlyMessage, timestamp: Date.now(), isError: true },
+        { id: generateId(), role: "assistant", content: failure.content, timestamp: Date.now(), isError: true, availability: failure.availability },
       ]);
     } finally {
       if (activeChatIdRef.current === requestChatId) setIsLoading(false);
     }
-  }, [celebrity, isLoading, language, t, privacyReady, consent.aiProcessing]);
+  }, [celebrity, isLoading, language, privacyReady, consent.aiProcessing, getFailureMessage]);
 
   const handlePersonaInterjection = useCallback(() => {
     if (!interjection || !celebrity || isLoading) return;
@@ -851,7 +875,14 @@ export default function ChatPage() {
                       msg.role === "user" ? "items-end" : "items-start",
                       msg.role === "assistant" && !startsGroup && "ml-10"
                     )}>
-                      <div className={cn("relative", msg.role === "user" ? "bubble-user" : "bubble-ai")}>
+                      <div
+                        className={cn(
+                          "relative",
+                          msg.role === "user" ? "bubble-user" : "bubble-ai",
+                          msg.availability && "availability-notice"
+                        )}
+                        role={msg.availability ? "status" : undefined}
+                      >
                         <div className="msg-content text-[13px] md:text-sm leading-[1.9] whitespace-pre-wrap">
                           {typewritingMessages.current.has(msg.id) ? "" : msg.content}
                         </div>
@@ -865,7 +896,7 @@ export default function ChatPage() {
                           </button>
                         )}
                       </div>
-                      {!typewritingMessages.current.has(msg.id) && !msg.isError && (
+                      {!typewritingMessages.current.has(msg.id) && !msg.isError && !msg.availability && (
                         <div className="message-actions mt-1 flex items-center gap-1" aria-label="消息操作">
                           <button
                             type="button"

@@ -175,6 +175,13 @@ html[data-chat-surface] body {
   box-shadow: 0 8px 24px rgba(26, 23, 20, 0.035), 0 1px 0 var(--paper-glow) inset;
 }
 
+/* A service-state notice remains visibly distinct from a normal character reply. */
+.availability-notice {
+  border-color: rgba(192, 57, 43, 0.3);
+  background: linear-gradient(100deg, rgba(192, 57, 43, 0.065), rgba(255, 255, 255, 0.88));
+  box-shadow: inset 3px 0 0 rgba(192, 57, 43, 0.58), 0 8px 24px rgba(26, 23, 20, 0.035);
+}
+
 .message-entry {
   position: relative;
 }

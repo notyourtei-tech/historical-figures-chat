@@ -12,6 +12,12 @@ import { celebrities } from "@/data/celebrities";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+// This protects a visitor's session. It is intentionally separate from a
+// provider's opaque free-tier quota, which the provider does not expose as a
+// reliable percentage.
+const CHAT_REQUEST_LIMIT = 20;
+const CHAT_REQUEST_WINDOW_MS = 60_000;
+
 function isAllowedOrigin(req: NextRequest): boolean {
   const host = req.headers.get("host") || "";
 
@@ -63,12 +69,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { allowed, remaining } = await rateLimit(ip, 20, 60000);
+    const { allowed, remaining } = await rateLimit(ip, CHAT_REQUEST_LIMIT, CHAT_REQUEST_WINDOW_MS);
     if (!allowed) {
       logSecurityEvent({ type: "RATE_LIMIT", ip, path: "/api/chat" });
       return NextResponse.json(
         { success: false, error: ErrorCode.RATE_LIMIT },
-        { status: 429, headers: { "Retry-After": "60" } }
+        {
+          status: 429,
+          headers: {
+            "Retry-After": "60",
+            "X-RateLimit-Limit": String(CHAT_REQUEST_LIMIT),
+            "X-RateLimit-Remaining": "0",
+          },
+        }
       );
     }
 
@@ -136,7 +149,13 @@ export async function POST(req: NextRequest) {
             send({ type: "complete" });
           } catch (error) {
             captureOperationalError(error, { route: "/api/chat", mode: "stream" });
-            send({ type: "error", error: ErrorCode.SERVER_ERROR });
+            const detail = error instanceof Error ? error.message : String(error);
+            const code = detail.includes(ErrorCode.RATE_LIMIT)
+              ? ErrorCode.RATE_LIMIT
+              : detail.includes(ErrorCode.AI_UNAVAILABLE)
+                ? ErrorCode.AI_UNAVAILABLE
+                : ErrorCode.SERVER_ERROR;
+            send({ type: "error", error: code });
           } finally {
             controller.close();
           }
@@ -148,6 +167,7 @@ export async function POST(req: NextRequest) {
           "Cache-Control": "no-cache, no-transform",
           Connection: "keep-alive",
           "X-Accel-Buffering": "no",
+          "X-RateLimit-Limit": String(CHAT_REQUEST_LIMIT),
           "X-RateLimit-Remaining": String(remaining),
         },
       });
@@ -155,7 +175,10 @@ export async function POST(req: NextRequest) {
 
     const result = await runChat(celebrity, sanitizedMessages, language);
     return NextResponse.json(result, {
-      headers: { "X-RateLimit-Remaining": String(remaining) },
+      headers: {
+        "X-RateLimit-Limit": String(CHAT_REQUEST_LIMIT),
+        "X-RateLimit-Remaining": String(remaining),
+      },
     });
   } catch (error: unknown) {
     console.error("[API /chat] Request failed");

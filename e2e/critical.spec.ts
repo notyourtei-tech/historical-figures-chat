@@ -54,6 +54,50 @@ test("chat sends, receives, and persists a local conversation", async ({ page })
   await expect.poll(() => page.evaluate(() => localStorage.getItem("chat_history_confucius") || "")).toContain("我今天该如何学习？");
 });
 
+test("a real free-service limit becomes a character-specific pause with a retry path", async ({ page }) => {
+  await seedVisitor(page);
+  await page.route("**/api/greeting", (route) => route.fulfill({ json: { success: true, content: "【抬眼】说吧。" } }));
+  await page.route("**/api/chat?stream=1", (route) => route.fulfill({
+    contentType: "text/event-stream",
+    body: 'data: {"type":"error","error":"RATE_LIMIT_EXCEEDED"}\n\n',
+  }));
+
+  await page.goto("/chat/qinshihuang");
+  await expect(page.getByText("说吧。")).toBeVisible();
+  const input = page.getByRole("textbox", { name: "开启对话..." });
+  await input.fill("我想继续问治国的事。");
+  await input.press("Enter");
+
+  await expect(page.getByText(/会话暂歇/)).toBeVisible();
+  await expect(page.getByText(/奏牍|政务|批阅/)).toBeVisible();
+  await expect(page.getByRole("button", { name: /重试/ })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("chat_history_qinshihuang") || "")).toContain("我想继续问治国的事。");
+});
+
+test("a low visitor capacity warning arrives after a complete character reply", async ({ page }) => {
+  await seedVisitor(page);
+  await page.route("**/api/greeting", (route) => route.fulfill({ json: { success: true, content: "【微笑】我们开始吧。" } }));
+  await page.route("**/api/chat?stream=1", (route) => route.fulfill({
+    contentType: "text/event-stream",
+    headers: { "X-RateLimit-Limit": "20", "X-RateLimit-Remaining": "2" },
+    body: [
+      'data: {"type":"delta","content":"先把假设写下来，再检验它。"}',
+      'data: {"type":"complete"}',
+      "",
+    ].join("\n\n"),
+  }));
+
+  await page.goto("/chat/einstein");
+  await expect(page.getByText("我们开始吧。")).toBeVisible();
+  const input = page.getByRole("textbox", { name: "开启对话..." });
+  await input.fill("相对论为什么重要？");
+  await input.press("Enter");
+
+  await expect(page.getByText("先把假设写下来，再检验它。")).toBeVisible();
+  await expect(page.getByText(/本轮免费会话的余量已经很低/)).toBeVisible();
+  await expect(page.getByText(/实验台|推演/)).toBeVisible();
+});
+
 test("long chat history never pushes the composer outside the viewport", async ({ page }) => {
   await seedVisitor(page);
   const history = createLongHistory();

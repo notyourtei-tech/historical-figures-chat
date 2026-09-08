@@ -25,6 +25,8 @@ export interface Message {
   content: string;
   timestamp: number;
   isError?: boolean;
+  /** A transparent, roleplay-styled service-capacity notice, never an AI reply. */
+  availability?: 'low_capacity' | 'service_paused';
 }
 
 export interface UserProfile {

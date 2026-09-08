@@ -7,6 +7,24 @@ type ChatApiResult = {
   error?: string;
 };
 
+export type ChatCapacity = {
+  remaining: number;
+  limit: number;
+  isLow: boolean;
+};
+
+// A warning leaves two requests in the current 20-request visitor window.
+// This is not presented as an OpenRouter balance because that value is not
+// available from the free router.
+export const LOW_CHAT_CAPACITY_RATIO = 0.1;
+
+function getChatCapacity(response: Response): ChatCapacity | null {
+  const remaining = Number(response.headers.get("X-RateLimit-Remaining"));
+  const limit = Number(response.headers.get("X-RateLimit-Limit"));
+  if (!Number.isFinite(remaining) || !Number.isFinite(limit) || limit <= 0 || remaining < 0) return null;
+  return { remaining, limit, isLow: remaining / limit <= LOW_CHAT_CAPACITY_RATIO };
+}
+
 export class ChatApiError extends Error {
   constructor(
     public readonly code: string,
@@ -68,13 +86,17 @@ export async function streamChatWithCelebrity(
   celebrity: Celebrity,
   messages: Message[],
   language: Language = "zh",
-  onDelta: (content: string) => void
+  onDelta: (content: string) => void,
+  onCapacity?: (capacity: ChatCapacity) => void
 ): Promise<string> {
   const response = await fetch("/api/chat?stream=1", {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
     body: JSON.stringify({ celebrity, messages, language }),
   });
+
+  const capacity = getChatCapacity(response);
+  if (capacity) onCapacity?.(capacity);
 
   const contentType = response.headers.get("content-type") || "";
   if (!contentType.includes("text/event-stream")) {

@@ -870,9 +870,9 @@ export async function runChat(
   try {
     const result = await callChatCompletion(aiMessages, {
       temperature: 0.85,
-      // The free router can choose a reasoning model; reserve enough output
-      // room for both its internal work and the user-visible reply.
-      max_tokens: 1600,
+      // The free router can choose a reasoning model. This leaves room for
+      // its hidden work while avoiding essay-length replies on a chat screen.
+      max_tokens: 1200,
     });
 
     if (result?.content) {
@@ -913,7 +913,7 @@ export async function* streamChat(
     recoveryAttempted = true;
     const result = await callChatCompletion(buildChatMessages(celebrity, messages, language), {
       temperature: 0.82,
-      max_tokens: 1600,
+      max_tokens: 1200,
     });
     if (!result?.content) throw new Error(ErrorCode.AI_UNAVAILABLE);
     console.log(`[AI] Recovered visible reply (${result.provider}/${result.model})`);
@@ -924,7 +924,7 @@ export async function* streamChat(
   try {
     for await (const event of streamChatCompletion(buildChatMessages(celebrity, messages, language), {
       temperature: 0.82,
-      max_tokens: 1600,
+      max_tokens: 1200,
     })) {
       if (event.type === "delta" && event.content) {
         received = true;
@@ -977,7 +977,7 @@ export async function runGreeting(
         { role: "system", content: systemPrompt },
         { role: "user", content: greetingPrompt },
       ],
-      { temperature: 0.9, max_tokens: 1200 }
+      { temperature: 0.9, max_tokens: 600 }
     );
 
     if (result?.content) {

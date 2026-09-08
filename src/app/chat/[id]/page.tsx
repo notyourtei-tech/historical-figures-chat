@@ -138,6 +138,10 @@ export default function ChatPage() {
   const isScrollGestureActiveRef = useRef(false);
   const scrollGestureTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoScrollFrame = useRef<number | null>(null);
+  // Provider streams often arrive in token-sized fragments. Rendering every
+  // fragment can compete with the software keyboard on lower-powered phones,
+  // so visual updates are coalesced to one per animation frame.
+  const streamRenderFrame = useRef<number | null>(null);
   const initializedForId = useRef<string | null>(null);
   const activeChatIdRef = useRef<string | null>(null);
   const cloudSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -173,6 +177,10 @@ export default function ChatPage() {
     if (scrollGestureTimer.current) {
       clearTimeout(scrollGestureTimer.current);
       scrollGestureTimer.current = null;
+    }
+    if (streamRenderFrame.current) {
+      cancelAnimationFrame(streamRenderFrame.current);
+      streamRenderFrame.current = null;
     }
     scheduledBeatTimers.current.forEach((timer) => clearTimeout(timer));
     scheduledBeatTimers.current = [];
@@ -363,19 +371,40 @@ export default function ChatPage() {
     root.dataset.chatSurface = "true";
 
     let viewportFrame: number | null = null;
+    let largestUnfocusedViewport = 0;
     const updateViewportHeight = () => {
       if (viewportFrame) cancelAnimationFrame(viewportFrame);
       viewportFrame = requestAnimationFrame(() => {
-        const vh = window.visualViewport?.height || window.innerHeight;
+        const visualViewport = window.visualViewport;
+        const vh = Math.round(visualViewport?.height || window.innerHeight);
+        const editorIsFocused = document.activeElement === textareaRef.current;
+        if (!editorIsFocused) {
+          largestUnfocusedViewport = Math.max(window.innerHeight, vh);
+        }
+        const keyboardIsOpen = editorIsFocused
+          && largestUnfocusedViewport > 0
+          && largestUnfocusedViewport - vh > 120;
         root.style.setProperty("--vh", `${vh}px`);
+        root.dataset.chatKeyboardOpen = keyboardIsOpen ? "true" : "false";
       });
     };
     updateViewportHeight();
     window.visualViewport?.addEventListener("resize", updateViewportHeight);
+    // iOS can pan the visual viewport without firing a layout resize while
+    // bringing a focused textarea above the keyboard.
+    window.visualViewport?.addEventListener("scroll", updateViewportHeight);
+    window.addEventListener("resize", updateViewportHeight);
+    document.addEventListener("focusin", updateViewportHeight);
+    document.addEventListener("focusout", updateViewportHeight);
     return () => {
       if (viewportFrame) cancelAnimationFrame(viewportFrame);
       window.visualViewport?.removeEventListener("resize", updateViewportHeight);
+      window.visualViewport?.removeEventListener("scroll", updateViewportHeight);
+      window.removeEventListener("resize", updateViewportHeight);
+      document.removeEventListener("focusin", updateViewportHeight);
+      document.removeEventListener("focusout", updateViewportHeight);
       delete root.dataset.chatSurface;
+      delete root.dataset.chatKeyboardOpen;
     };
   }, []);
 
@@ -444,7 +473,7 @@ export default function ChatPage() {
       }
       // Keep the reply feeling alive without making a readable answer wait on
       // an ornamental animation. Long replies should arrive at conversation speed.
-      const speed = window.innerWidth <= 768 ? 14 : 18;
+      const speed = window.innerWidth <= 768 ? 8 : 10;
       cleanupTypewriterRef.current = typewriterEffect(contentEl, lastMsg.content, speed);
     };
 
@@ -469,6 +498,7 @@ export default function ChatPage() {
       }
       if (scrollGestureTimer.current) clearTimeout(scrollGestureTimer.current);
       if (autoScrollFrame.current) cancelAnimationFrame(autoScrollFrame.current);
+      if (streamRenderFrame.current) cancelAnimationFrame(streamRenderFrame.current);
       scheduledBeatTimers.current.forEach((timer) => clearTimeout(timer));
     };
   }, []);
@@ -481,6 +511,10 @@ export default function ChatPage() {
     renderedMessages.current.clear();
     typewritingMessages.current.clear();
     streamingMessageIds.current.clear();
+    if (streamRenderFrame.current) {
+      cancelAnimationFrame(streamRenderFrame.current);
+      streamRenderFrame.current = null;
+    }
     chatRequestSequence.current += 1;
     scheduledBeatTimers.current.forEach((timer) => clearTimeout(timer));
     scheduledBeatTimers.current = [];
@@ -595,15 +629,31 @@ export default function ChatPage() {
       const allMessages = [...previousMessages, userMessage];
       let received = "";
       const requestMeta: { capacity: ChatCapacity | null } = { capacity: null };
+      const flushStreamingMessage = () => {
+        if (streamRenderFrame.current) {
+          cancelAnimationFrame(streamRenderFrame.current);
+          streamRenderFrame.current = null;
+        }
+        if (activeChatIdRef.current !== requestChatId || chatRequestSequence.current !== requestSequence) return;
+        setHasStreamingContent(received.length > 0);
+        setMessages((prev) => prev.map((message) => message.id === streamingMessageId ? { ...message, content: received } : message));
+      };
+      const scheduleStreamingRender = () => {
+        if (streamRenderFrame.current) return;
+        streamRenderFrame.current = requestAnimationFrame(() => {
+          streamRenderFrame.current = null;
+          flushStreamingMessage();
+        });
+      };
       const response = await streamChatWithCelebrity(celebrity, allMessages, language, (delta) => {
         if (activeChatIdRef.current !== requestChatId || chatRequestSequence.current !== requestSequence) return;
         received += delta;
-        setHasStreamingContent(true);
-        setMessages((prev) => prev.map((message) => message.id === streamingMessageId ? { ...message, content: received } : message));
+        scheduleStreamingRender();
       }, (capacity) => {
         requestMeta.capacity = capacity;
       });
       if (activeChatIdRef.current !== requestChatId || chatRequestSequence.current !== requestSequence) return;
+      flushStreamingMessage();
 
       const beats = parsePersonaBeats(response || received);
       const [firstBeat = response || received, ...laterBeats] = beats;

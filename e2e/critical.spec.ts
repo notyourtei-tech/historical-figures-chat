@@ -143,6 +143,39 @@ test("long chat history never pushes the composer outside the viewport", async (
   await expect(input).toBeVisible();
 });
 
+test("the mobile composer tracks a shrinking visual viewport without moving the page", async ({ page }) => {
+  await seedVisitor(page);
+  await page.addInitScript((messages) => {
+    localStorage.setItem("chat_history_confucius", JSON.stringify(messages));
+  }, createLongHistory());
+  await page.goto("/chat/confucius");
+  const input = page.getByRole("textbox", { name: "开启对话..." });
+  await input.focus();
+
+  // This simulates the reduced visible area produced by a phone keyboard.
+  // The app must recalculate its VisualViewport-backed layout rather than
+  // letting the document or the composer jump outside the screen.
+  await page.setViewportSize({ width: 390, height: 430 });
+  await expect.poll(() => page.evaluate(() => {
+    const composer = document.querySelector<HTMLElement>('[data-testid="chat-composer"]');
+    const scrollArea = document.querySelector<HTMLElement>('[data-testid="chat-scroll-area"]');
+    if (!composer || !scrollArea) return false;
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const composerRect = composer.getBoundingClientRect();
+    const root = document.documentElement;
+    return root.style.getPropertyValue("--vh") === `${Math.round(viewportHeight)}px`
+      && root.dataset.chatSurface === "true"
+      && composerRect.top >= -2
+      && composerRect.bottom <= viewportHeight + 2
+      && scrollArea.clientHeight > 0
+      && document.documentElement.scrollHeight <= document.documentElement.clientHeight + 2
+      && window.scrollY === 0;
+  })).toBe(true);
+
+  await input.fill("键盘打开后，输入区仍应保持稳定、可见并且方便继续输入。");
+  await expect(input).toBeVisible();
+});
+
 test("reading older messages never moves the page or pulls the reader back to the latest reply", async ({ page }) => {
   await seedVisitor(page);
   await page.addInitScript((messages) => {

@@ -35,6 +35,13 @@ html[data-chat-surface] body {
   height: var(--vh);
   overflow: hidden;
   overscroll-behavior: none;
+  scroll-behavior: auto;
+}
+
+html[data-chat-surface] body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
 }
 
 ::selection {
@@ -257,7 +264,9 @@ html[data-chat-surface] body {
   background: linear-gradient(to bottom, rgba(247, 244, 238, 0.72), var(--background) 28%);
   border-top: 1px solid rgba(26, 23, 20, 0.08);
   box-shadow: 0 -12px 28px rgba(63, 51, 37, 0.045);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* The second inset is used by browsers implementing the Virtual Keyboard
+     API. iOS Safari instead drives --vh through VisualViewport above. */
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), env(keyboard-inset-height, 0px));
 }
 
 .scroll-to-latest {
@@ -325,6 +334,8 @@ html[data-chat-surface] body {
 /* Chat atelier: a calm, fixed reading surface with a paper-and-ink identity. */
 .chat-atelier {
   isolation: isolate;
+  height: min(var(--vh), 100dvh);
+  max-height: min(var(--vh), 100dvh);
   background:
     radial-gradient(ellipse 72% 42% at 14% -12%, rgba(192, 57, 43, 0.075), transparent 68%),
     radial-gradient(ellipse 54% 48% at 92% 106%, rgba(26, 23, 20, 0.055), transparent 72%),
@@ -406,6 +417,25 @@ html[data-chat-surface] body {
 
   .chat-composer-panel {
     border-radius: 16px;
+  }
+
+  /* When the keyboard is open, protect the writing surface rather than
+     letting browser chrome or a tall header consume the remaining viewport. */
+  html[data-chat-keyboard-open="true"] .chat-header {
+    height: 3.25rem;
+  }
+
+  html[data-chat-keyboard-open="true"] .chat-header .era-tag {
+    display: none;
+  }
+
+  html[data-chat-keyboard-open="true"] .chat-input-wrap > div {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  html[data-chat-keyboard-open="true"] .chat-composer-panel {
+    border-radius: 14px;
   }
 }
 

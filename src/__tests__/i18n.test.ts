@@ -17,6 +17,8 @@ describe("translateEra", () => {
     expect(translateEra("上古", "zh")).toBe("上古");
     expect(translateEra("近代", "en")).toBe("Modern Era");
     expect(translateEra("战国", "ja")).toBe("戦国");
+    expect(translateEra("唐朝", "en")).toBe("Tang Dynasty");
+    expect(translateEra("江户时代", "ja")).toBe("江戸時代");
   });
 });
 

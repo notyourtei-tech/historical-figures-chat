@@ -50,6 +50,15 @@ describe("celebrities data", () => {
     expect(eras.size).toBeGreaterThanOrEqual(5);
   });
 
+  it("shows historically specific eras for prominent Chinese figures", () => {
+    const eraById = new Map(celebrities.map((celebrity) => [celebrity.id, celebrity.era]));
+
+    expect(eraById.get("libai")).toBe("唐朝");
+    expect(eraById.get("tangtaizong")).toBe("唐朝");
+    expect(eraById.get("sushi")).toBe("北宋");
+    expect(eraById.get("zhugeliang")).toBe("三国");
+  });
+
   it("all celebrities have MBTI mapping", () => {
     const missing = celebrities.filter((c) => !getCelebrityMbti(c.id));
     expect(missing).toEqual([]);

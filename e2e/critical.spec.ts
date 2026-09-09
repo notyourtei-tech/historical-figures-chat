@@ -314,6 +314,7 @@ test("first-visit privacy choice never hides the composer", async ({ page }) => 
   const consentBanner = page.getByTestId("privacy-consent-banner");
   await expect(composer).toBeVisible();
   await expect(consentBanner).toBeVisible();
+  await expect(page.getByTestId("enable-ai-chat")).toBeHidden();
   await expect.poll(() => page.evaluate(() => {
     const composerElement = document.querySelector<HTMLElement>('[data-testid="chat-composer"]');
     const bannerElement = document.querySelector<HTMLElement>('[data-testid="privacy-consent-banner"]');

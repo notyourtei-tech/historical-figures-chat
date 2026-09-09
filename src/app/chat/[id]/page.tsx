@@ -248,7 +248,9 @@ export default function ChatPage() {
       setMessages([{
         id: generateId(),
         role: "assistant",
-        content: language === "zh" ? "AI 对话尚未启用。请点击输入框上方的“开启 AI 对话”；你也可在隐私说明中随时调整选择。" : "AI chat is not enabled. Select “Enable AI chat” above the composer, or adjust the choice in Privacy Settings.",
+        content: language === "zh"
+          ? (consent.completed ? "AI 对话尚未启用。请点击输入框上方的“开启 AI 对话”；你也可在隐私说明中随时调整选择。" : "开始前，请在页面上方选择是否允许 AI 处理消息；你也可在隐私说明中随时调整选择。")
+          : (consent.completed ? "AI chat is not enabled. Select “Enable AI chat” above the composer, or adjust the choice in Privacy Settings." : "Before starting, choose whether to allow AI processing in the privacy controls above. You can change this any time in Privacy Settings."),
         timestamp: Date.now(),
       }]);
       return;
@@ -273,7 +275,7 @@ export default function ChatPage() {
       .finally(() => {
         if (fetchId === greetingFetchId.current) setIsLoading(false);
       });
-  }, [id, isClient, language, privacyReady, consent.aiProcessing, router]);
+  }, [id, isClient, language, privacyReady, consent.aiProcessing, consent.completed, router]);
 
   // When language changes during an active chat, save preference for next messages
   useEffect(() => {
@@ -1075,7 +1077,7 @@ export default function ChatPage() {
         aria-label="消息输入区"
       >
         <div className="max-w-3xl mx-auto px-3 md:px-6 py-3">
-          {privacyReady && !consent.aiProcessing && (
+          {privacyReady && consent.completed && !consent.aiProcessing && (
             <div
               data-testid="enable-ai-chat"
               className="mb-2 flex items-center justify-between gap-3 rounded-xl border border-vermilion/15 bg-vermilion-light/50 px-3 py-2"

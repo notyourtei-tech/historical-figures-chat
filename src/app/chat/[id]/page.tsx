@@ -127,6 +127,7 @@ export default function ChatPage() {
   const [hasStreamingContent, setHasStreamingContent] = useState(false);
   const [interjection, setInterjection] = useState<string | null>(null);
   const [avatarFallback, setAvatarFallback] = useState(false);
+  const [statusNotice, setStatusNotice] = useState({ id: 0, text: "" });
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const greetingFetchId = useRef(0);
@@ -196,6 +197,7 @@ export default function ChatPage() {
     setHasStreamingContent(false);
     setInterjection(null);
     setAvatarFallback(false);
+    setStatusNotice({ id: 0, text: "" });
     renderedMessages.current.clear();
     typewritingMessages.current.clear();
     streamingMessageIds.current.clear();
@@ -520,6 +522,7 @@ export default function ChatPage() {
     scheduledBeatTimers.current = [];
     setHasStreamingContent(false);
     setInterjection(null);
+    setStatusNotice({ id: 0, text: "" });
     setMessages([]);
     setInput("");
 
@@ -622,6 +625,10 @@ export default function ChatPage() {
     setInterjection(null);
     setIsLoading(true);
     setHasStreamingContent(false);
+    setStatusNotice((previous) => ({
+      id: previous.id + 1,
+      text: language === "zh" ? `${celebrity.name[language]}正在组织回复。` : `${celebrity.name[language]} is composing a reply.`,
+    }));
     trackEvent("message_sent", { celebrity_id: celebrity.id, length_bucket: Math.ceil(content.length / 100) * 100 });
     if (previousMessages.length === 0) trackEvent("conversation_started", { celebrity_id: celebrity.id });
 
@@ -660,6 +667,10 @@ export default function ChatPage() {
       streamingMessageIds.current.delete(streamingMessageId);
       renderedMessages.current.add(streamingMessageId);
       setMessages((prev) => prev.map((message) => message.id === streamingMessageId ? { ...message, content: firstBeat } : message));
+      setStatusNotice((previous) => ({
+        id: previous.id + 1,
+        text: language === "zh" ? `${celebrity.name[language]}已回复。` : `${celebrity.name[language]} has replied.`,
+      }));
       laterBeats.forEach((beat, index) => {
         const timer = setTimeout(() => {
           if (activeChatIdRef.current !== requestChatId || chatRequestSequence.current !== requestSequence) return;
@@ -693,6 +704,10 @@ export default function ChatPage() {
       console.error(error);
       const failure = getFailureMessage(error, celebrity);
       streamingMessageIds.current.delete(streamingMessageId);
+      setStatusNotice((previous) => ({
+        id: previous.id + 1,
+        text: language === "zh" ? `${celebrity.name[language]}暂时无法回复，请查看消息中的下一步提示。` : `${celebrity.name[language]} cannot reply right now. Review the next-step message in the conversation.`,
+      }));
       setMessages((prev) => [
         ...prev.filter((message) => message.id !== streamingMessageId),
         { id: generateId(), role: "assistant", content: failure.content, timestamp: Date.now(), isError: true, availability: failure.availability },
@@ -731,10 +746,18 @@ export default function ChatPage() {
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, assistantMessage]);
+      setStatusNotice((previous) => ({
+        id: previous.id + 1,
+        text: language === "zh" ? `${celebrity.name[language]}已回复。` : `${celebrity.name[language]} has replied.`,
+      }));
     } catch (error) {
       if (activeChatIdRef.current !== requestChatId) return;
       console.error(error);
       const failure = getFailureMessage(error, celebrity);
+      setStatusNotice((previous) => ({
+        id: previous.id + 1,
+        text: language === "zh" ? `${celebrity.name[language]}暂时无法回复，请查看消息中的下一步提示。` : `${celebrity.name[language]} cannot reply right now. Review the next-step message in the conversation.`,
+      }));
       setMessages((prev) => [
         ...prev,
         { id: generateId(), role: "assistant", content: failure.content, timestamp: Date.now(), isError: true, availability: failure.availability },
@@ -820,7 +843,7 @@ export default function ChatPage() {
       className="chat-atelier flex h-[var(--vh)] max-h-[var(--vh)] min-h-0 flex-col overflow-hidden"
     >
       {/* Header */}
-      <header className="chat-header h-14 md:h-16 flex items-center justify-between px-3 md:px-6 flex-shrink-0 z-40">
+      <header data-chat-page-layer className="chat-header h-14 md:h-16 flex items-center justify-between px-3 md:px-6 flex-shrink-0 z-40">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/")}
@@ -879,6 +902,7 @@ export default function ChatPage() {
       <div
         ref={chatAreaRef}
         className="page-transition relative flex min-h-0 flex-1 flex-col overflow-hidden"
+        data-chat-page-layer
       >
         <div
           ref={scrollRef}
@@ -890,8 +914,9 @@ export default function ChatPage() {
           data-testid="chat-scroll-area"
           className="chat-scroll-surface custom-scrollbar min-h-0 flex-1 overflow-y-auto"
           role="log"
-          aria-live="polite"
-          aria-relevant="additions text"
+          aria-live="off"
+          aria-relevant="additions"
+          aria-busy={isLoading}
           aria-label={`${currentCelebrity.name[language]} ${t("chat_history")}`}
         >
           <div className="chat-transcript max-w-3xl mx-auto px-4 py-5 md:py-6 space-y-3">
@@ -956,7 +981,7 @@ export default function ChatPage() {
                         )}
                       </div>
                       {!typewritingMessages.current.has(msg.id) && !msg.isError && !msg.availability && (
-                        <div className="message-actions mt-1 flex items-center gap-1" aria-label="消息操作">
+                        <div className="message-actions mt-1 flex items-center gap-1" role="group" aria-label="消息操作">
                           <button
                             type="button"
                             onClick={() => handleCopy(msg.id, msg.content)}
@@ -1044,6 +1069,7 @@ export default function ChatPage() {
       <div
         className="chat-input-wrap z-40 shrink-0"
         data-testid="chat-composer"
+        data-chat-page-layer
         role="region"
         aria-label="消息输入区"
       >
@@ -1097,8 +1123,8 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
-      <p className="sr-only" role="status" aria-live="polite">
-        {copiedId ? (language === "zh" ? "消息已复制到剪贴板" : "Message copied to clipboard") : ""}
+      <p key={statusNotice.id} className="sr-only" role="status" aria-live="polite">
+        {statusNotice.text || (copiedId ? (language === "zh" ? "消息已复制到剪贴板" : "Message copied to clipboard") : "")}
       </p>
       <ChatHistorySidebar
         open={sidebarOpen}

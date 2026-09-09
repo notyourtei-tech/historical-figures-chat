@@ -36,7 +36,7 @@ describe("celebrities data", () => {
 
   it("all celebrities have valid local avatar paths", () => {
     celebrities.forEach((c) => {
-      expect(c.avatar).toMatch(/^\/images\/avatars\/.+\.png$/);
+      expect(c.avatar).toMatch(/^\/images\/avatars\/.+\.webp$/);
     });
   });
 

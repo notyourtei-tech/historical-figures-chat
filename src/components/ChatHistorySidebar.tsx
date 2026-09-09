@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, MessageCircle, Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { celebrities } from "@/data/celebrities";
 import { useLanguage } from "@/context/LanguageContext";
 import { Language } from "@/types";
@@ -71,6 +70,7 @@ export default function ChatHistorySidebar({
   const { t } = useLanguage();
   const [conversations, setConversations] = useState<ConversationMeta[]>([]);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -112,16 +112,44 @@ export default function ChatHistorySidebar({
 
     const previousFocus = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
+    const pageLayers = Array.from(document.querySelectorAll<HTMLElement>("[data-chat-page-layer]"));
+    const previouslyInert = pageLayers.map((element) => element.hasAttribute("inert"));
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      ) || []).filter((element) => !element.hidden);
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
 
     document.body.style.overflow = "hidden";
+    pageLayers.forEach((element) => element.setAttribute("inert", ""));
     document.addEventListener("keydown", handleKeyDown);
     window.requestAnimationFrame(() => closeButtonRef.current?.focus());
 
     return () => {
       document.body.style.overflow = previousOverflow;
+      pageLayers.forEach((element, index) => {
+        if (!previouslyInert[index]) element.removeAttribute("inert");
+      });
       document.removeEventListener("keydown", handleKeyDown);
       previousFocus?.focus();
     };
@@ -129,6 +157,8 @@ export default function ChatHistorySidebar({
 
   const handleDelete = useCallback((id: string) => {
     const celeb = celebrities.find((c) => c.id === id);
+    const name = celeb?.name.zh || conversations.find((conversation) => conversation.celebrityId === id)?.celebrityName || "这位人物";
+    if (!window.confirm(`确定删除与${name}的聊天记录吗？此操作无法撤销。`)) return;
     if (celeb) {
       localStorage.removeItem(`chat_history_${id}`);
       localStorage.removeItem(`chat_lang_${id}`);
@@ -173,6 +203,7 @@ export default function ChatHistorySidebar({
             role="dialog"
             aria-modal="true"
             aria-label="聊天记录"
+            ref={dialogRef}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <h2 className="text-sm font-bold text-ink-500">{t("chat_history") || "对话历史"}</h2>
@@ -199,42 +230,33 @@ export default function ChatHistorySidebar({
                     return (
                       <div
                         key={conv.celebrityId}
-                        className={cn(
-                          "group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors hover:bg-ink-50"
-                        )}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => {
-                          onSelect(conv.celebrityId);
-                          onClose();
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
+                        className="group flex items-center gap-1 rounded-xl transition-colors hover:bg-ink-50"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
                             onSelect(conv.celebrityId);
                             onClose();
-                          }
-                        }}
-                      >
-                        <ConversationAvatar avatar={celeb?.avatar} name={conv.celebrityName} />
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-xs font-bold text-ink-500 truncate">{conv.celebrityName}</h3>
-                          <p className="text-[10px] text-ink-300 truncate mt-0.5">{conv.lastMessage}</p>
-                        </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <span className="text-[9px] text-ink-300">{formatTime(conv.lastTimestamp)}</span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(conv.celebrityId);
-                            }}
-                            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-ink-100 transition-opacity"
-                            aria-label={`删除与 ${conv.celebrityName} 的聊天记录`}
-                            title="删除聊天记录"
-                          >
-                            <Trash2 className="w-3 h-3 text-ink-300" aria-hidden="true" />
-                          </button>
-                        </div>
+                          }}
+                          className="touch-target flex min-w-0 flex-1 items-center gap-3 rounded-xl p-3 text-left hover:bg-ink-50"
+                          aria-label={`打开与 ${conv.celebrityName} 的聊天记录`}
+                        >
+                          <ConversationAvatar avatar={celeb?.avatar} name={conv.celebrityName} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-xs font-bold text-ink-500">{conv.celebrityName}</span>
+                            <span className="mt-0.5 block truncate text-[10px] text-ink-300">{conv.lastMessage}</span>
+                          </span>
+                          <span className="shrink-0 text-[9px] text-ink-300">{formatTime(conv.lastTimestamp)}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(conv.celebrityId)}
+                          className="conversation-delete touch-target mr-1 flex h-10 w-10 items-center justify-center rounded-lg opacity-0 transition-opacity hover:bg-ink-100 group-hover:opacity-100 focus-visible:opacity-100"
+                          aria-label={`删除与 ${conv.celebrityName} 的聊天记录`}
+                          title="删除聊天记录"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-ink-300" aria-hidden="true" />
+                        </button>
                       </div>
                     );
                   })}

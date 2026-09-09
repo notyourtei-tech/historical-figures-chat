@@ -87,6 +87,8 @@ export default function HomePage() {
   const [langOpen, setLangOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
+  const languageButtonRef = useRef<HTMLButtonElement>(null);
+  const languageMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -94,11 +96,19 @@ export default function HomePage() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setLangOpen(false);
+      if (e.key === "Escape" && langOpen) {
+        setLangOpen(false);
+        languageButtonRef.current?.focus();
+      }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [langOpen]);
+
+  useEffect(() => {
+    if (!langOpen) return;
+    window.requestAnimationFrame(() => languageMenuRef.current?.querySelector<HTMLButtonElement>("button")?.focus());
+  }, [langOpen]);
 
   useEffect(() => {
     if (!isClient) return;
@@ -173,24 +183,28 @@ export default function HomePage() {
           <AuthMenu />
           <div className="relative" ref={langRef}>
             <button
+              ref={languageButtonRef}
               onClick={() => setLangOpen(!langOpen)}
               className="touch-target flex items-center gap-2 px-3 py-1.5 rounded-lg bg-ink-100 text-xs font-medium text-ink-400 hover:bg-ink-200 transition-colors"
               aria-label="切换界面语言"
               aria-expanded={langOpen}
-              aria-haspopup="menu"
+              aria-haspopup="true"
               aria-controls="language-menu"
             >
               <Globe className="w-3.5 h-3.5" aria-hidden="true" />
               {languageLabel(language)}
             </button>
             {langOpen && (
-              <div id="language-menu" role="menu" aria-label="语言选项" className="absolute right-0 top-full mt-2 w-36 bg-white border border-border rounded-lg shadow-lg p-1 z-[60]">
+              <div ref={languageMenuRef} id="language-menu" role="group" aria-label="语言选项" className="absolute right-0 top-full mt-2 w-36 bg-white border border-border rounded-lg shadow-lg p-1 z-[60]">
                 {(["zh", "en", "ja", "vi", "my"] as Language[]).map((lang) => (
                   <button
                     key={lang}
-                    onClick={() => { setLanguage(lang); setLangOpen(false); }}
-                    role="menuitemradio"
-                    aria-checked={language === lang}
+                    onClick={() => {
+                      setLanguage(lang);
+                      setLangOpen(false);
+                      window.requestAnimationFrame(() => languageButtonRef.current?.focus());
+                    }}
+                    aria-pressed={language === lang}
                     className={cn(
                       "touch-target w-full text-left px-3 py-2 text-xs rounded-md transition-colors",
                       language === lang ? "text-vermilion font-bold bg-vermilion-light" : "text-ink-400 hover:bg-ink-50"

@@ -30,6 +30,11 @@ test("home page is usable without horizontal overflow", async ({ page }) => {
   await seedVisitor(page);
   await page.goto("/");
   await expect(page.locator('a[href="/chat/confucius"]').first()).toBeVisible();
+  const confuciusAvatar = page.getByAltText("孔子").first();
+  await expect.poll(() => confuciusAvatar.evaluate((image) => {
+    const imageElement = image as HTMLImageElement;
+    return imageElement.complete && imageElement.naturalWidth > 0 && imageElement.currentSrc.endsWith(".webp");
+  })).toBe(true);
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
@@ -51,7 +56,75 @@ test("chat sends, receives, and persists a local conversation", async ({ page })
   await input.fill("我今天该如何学习？");
   await input.press("Enter");
   await expect(page.getByText("知行合一，先从眼前一步开始。")).toBeVisible();
+  await expect(page.getByTestId("chat-scroll-area")).toHaveAttribute("aria-live", "off");
+  await expect(page.getByRole("status")).toContainText("孔子已回复");
   await expect.poll(() => page.evaluate(() => localStorage.getItem("chat_history_confucius") || "")).toContain("我今天该如何学习？");
+});
+
+test("a 320px phone keeps long bubbles, message actions, and the composer inside the screen", async ({ page }) => {
+  await seedVisitor(page);
+  await page.addInitScript(() => {
+    const longUnbrokenText = "https://example.com/" + "very-long-address-segment-".repeat(26);
+    localStorage.setItem("chat_history_confucius", JSON.stringify([
+      { id: "narrow-assistant", role: "assistant", content: longUnbrokenText, timestamp: Date.now() - 60_000 },
+      { id: "narrow-user", role: "user", content: longUnbrokenText, timestamp: Date.now() },
+    ]));
+  });
+  await page.goto("/chat/confucius");
+  await page.setViewportSize({ width: 320, height: 568 });
+
+  const input = page.getByRole("textbox", { name: "开启对话..." });
+  const lastMessage = page.locator('[data-msg-id="narrow-user"]');
+  await expect(input).toBeVisible();
+  await expect(lastMessage.getByRole("button", { name: "复制" })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => {
+    const composer = document.querySelector<HTMLElement>('[data-testid="chat-composer"]');
+    const bubbles = Array.from(document.querySelectorAll<HTMLElement>(".bubble-ai, .bubble-user"));
+    if (!composer || bubbles.length < 2) return false;
+    const viewport = window.innerWidth;
+    const composerRect = composer.getBoundingClientRect();
+    return document.documentElement.scrollWidth <= viewport
+      && composerRect.left >= 0
+      && composerRect.right <= viewport
+      && bubbles.every((bubble) => {
+        const rect = bubble.getBoundingClientRect();
+        return rect.left >= 0 && rect.right <= viewport;
+      });
+  })).toBe(true);
+});
+
+test("history drawer keeps keyboard focus contained and exposes a visible delete action on touch", async ({ page }) => {
+  await seedVisitor(page);
+  await page.addInitScript(() => {
+    localStorage.setItem("chat_conversations", JSON.stringify([{
+      id: "confucius",
+      celebrityId: "confucius",
+      celebrityName: "孔子",
+      lastMessage: "一段可恢复的对话",
+      messageCount: 2,
+      lastTimestamp: Date.now(),
+      lang: "zh",
+    }]));
+  });
+  await page.goto("/chat/confucius");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: /对话历史|Chat History/ }).click();
+
+  const close = page.getByRole("button", { name: "关闭聊天记录" });
+  const remove = page.getByRole("button", { name: "删除与 孔子 的聊天记录" });
+  await expect(close).toBeFocused();
+  await expect(remove).toBeVisible();
+  await expect.poll(() => remove.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const requiresAlwaysVisibleAction = matchMedia("(pointer: coarse)").matches;
+    return rect.width >= 40 && rect.height >= 40 && (!requiresAlwaysVisibleAction || getComputedStyle(element).opacity === "1");
+  })).toBe(true);
+  await page.keyboard.press("Shift+Tab");
+  await expect(remove).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(close).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(close).toBeHidden();
 });
 
 test("a real free-service limit becomes a character-specific pause with a retry path", async ({ page }) => {

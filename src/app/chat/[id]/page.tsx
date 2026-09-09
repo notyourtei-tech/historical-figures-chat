@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { celebrities } from "@/data/celebrities";
@@ -112,7 +113,7 @@ export default function ChatPage() {
   const id = params.id as string;
   const router = useRouter();
   const { language, t } = useLanguage();
-  const { consent, ready: privacyReady } = usePrivacy();
+  const { consent, ready: privacyReady, updateConsent } = usePrivacy();
   const [celebrity, setCelebrity] = useState<Celebrity | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -247,7 +248,7 @@ export default function ChatPage() {
       setMessages([{
         id: generateId(),
         role: "assistant",
-        content: language === "zh" ? "请先在页面底部选择“同意并开始对话”，我才会将你的消息发送给 AI 生成回复。你也可在隐私说明中随时调整选择。" : "Choose “Allow AI processing” in the privacy controls before sending a message to the AI.",
+        content: language === "zh" ? "AI 对话尚未启用。请点击输入框上方的“开启 AI 对话”；你也可在隐私说明中随时调整选择。" : "AI chat is not enabled. Select “Enable AI chat” above the composer, or adjust the choice in Privacy Settings.",
         timestamp: Date.now(),
       }]);
       return;
@@ -1074,6 +1075,27 @@ export default function ChatPage() {
         aria-label="消息输入区"
       >
         <div className="max-w-3xl mx-auto px-3 md:px-6 py-3">
+          {privacyReady && !consent.aiProcessing && (
+            <div
+              data-testid="enable-ai-chat"
+              className="mb-2 flex items-center justify-between gap-3 rounded-xl border border-vermilion/15 bg-vermilion-light/50 px-3 py-2"
+              role="status"
+            >
+              <p className="min-w-0 text-xs leading-relaxed text-ink-400">
+                {language === "zh" ? "开启后，消息会发送给 AI 生成回复。" : "When enabled, messages are sent to AI to generate replies."}
+                <Link href="/privacy" className="ml-1 whitespace-nowrap underline underline-offset-2 hover:text-vermilion">
+                  {language === "zh" ? "隐私说明" : "Privacy settings"}
+                </Link>
+              </p>
+              <button
+                type="button"
+                onClick={() => updateConsent({ aiProcessing: true, analytics: consent.analytics })}
+                className="touch-target shrink-0 rounded-lg bg-vermilion px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-vermilion-hover"
+              >
+                {language === "zh" ? "开启 AI 对话" : "Enable AI chat"}
+              </button>
+            </div>
+          )}
           {interjection && !isLoading && (
             <button
               type="button"

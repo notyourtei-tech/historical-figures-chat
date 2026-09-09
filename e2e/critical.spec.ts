@@ -324,6 +324,24 @@ test("first-visit privacy choice never hides the composer", async ({ page }) => 
   })).toBe(true);
 });
 
+test("a browsing-only visitor has a clear, one-tap route back to AI chat", async ({ page }) => {
+  await seedVisitor(page, { ...acceptedConsent, aiProcessing: false });
+  await page.route("**/api/greeting", (route) => route.fulfill({ json: { success: true, content: "现在可以开始对话。" } }));
+  await page.goto("/chat/confucius");
+
+  const enableChat = page.getByTestId("enable-ai-chat");
+  await expect(enableChat).toBeVisible();
+  await expect(enableChat.getByRole("link", { name: "隐私说明" })).toHaveAttribute("href", "/privacy");
+  await enableChat.getByRole("button", { name: "开启 AI 对话" }).click();
+
+  await expect.poll(() => page.evaluate(() => {
+    const saved = localStorage.getItem("wan_gu_ling_xi_privacy_consent");
+    return saved ? JSON.parse(saved).aiProcessing : false;
+  })).toBe(true);
+  await expect(enableChat).toBeHidden();
+  await expect(page.getByRole("textbox", { name: "开启对话..." })).toBeVisible();
+});
+
 test("chat composer passes the WCAG AA automated scan", async ({ page }) => {
   await seedVisitor(page);
   await page.addInitScript(() => {
@@ -365,6 +383,7 @@ test("AI endpoint is not called until AI processing is explicitly allowed", asyn
   let greetingCalls = 0;
   await page.route("**/api/greeting", (route) => { greetingCalls += 1; return route.abort(); });
   await page.goto("/chat/confucius");
-  await expect(page.getByText("请先在页面底部选择")).toBeVisible();
+  await expect(page.getByText("AI 对话尚未启用")).toBeVisible();
+  await expect(page.getByTestId("enable-ai-chat")).toBeVisible();
   expect(greetingCalls).toBe(0);
 });

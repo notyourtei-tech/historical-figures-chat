@@ -33,9 +33,15 @@ body {
 html[data-chat-surface],
 html[data-chat-surface] body {
   height: var(--vh);
+  min-height: var(--vh);
+  max-height: var(--vh);
+  /* The document is a stable app canvas. Only the transcript is allowed to
+     scroll, so stray swipes cannot move or expose the paper background. */
   overflow: hidden;
+  overflow: clip;
   overscroll-behavior: none;
   scroll-behavior: auto;
+  touch-action: pan-y;
 }
 
 html[data-chat-surface] body {
@@ -364,6 +370,11 @@ html[data-chat-surface] body {
   isolation: isolate;
   height: min(var(--vh), 100dvh);
   max-height: min(var(--vh), 100dvh);
+  overflow: clip;
+  overscroll-behavior: contain;
+  /* Prevent horizontal drags, double-tap zoom, and pinch gestures from
+     affecting the surrounding document. The transcript retains pan-y below. */
+  touch-action: pan-y;
   background:
     radial-gradient(ellipse 72% 42% at 14% -12%, rgba(192, 57, 43, 0.075), transparent 68%),
     radial-gradient(ellipse 54% 48% at 92% 106%, rgba(26, 23, 20, 0.055), transparent 72%),
@@ -389,7 +400,7 @@ html[data-chat-surface] body {
 }
 
 .chat-scroll-surface {
-  overscroll-behavior-y: contain;
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   scrollbar-gutter: stable;

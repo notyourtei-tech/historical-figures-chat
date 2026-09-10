@@ -249,6 +249,48 @@ test("the mobile composer tracks a shrinking visual viewport without moving the 
   await expect(input).toBeVisible();
 });
 
+test("mobile chat confines stray page gestures to the transcript", async ({ page }) => {
+  await seedVisitor(page);
+  await page.addInitScript((messages) => {
+    localStorage.setItem("chat_history_confucius", JSON.stringify(messages));
+  }, createLongHistory());
+  await page.goto("/chat/confucius");
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  const scrollArea = page.getByTestId("chat-scroll-area");
+  await expect.poll(() => page.evaluate(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    const canvas = document.querySelector<HTMLElement>(".chat-atelier");
+    const transcript = document.querySelector<HTMLElement>('[data-testid="chat-scroll-area"]');
+    if (!canvas || !transcript) return false;
+    const rootStyle = getComputedStyle(root);
+    const bodyStyle = getComputedStyle(body);
+    const canvasStyle = getComputedStyle(canvas);
+    const transcriptStyle = getComputedStyle(transcript);
+    return root.dataset.chatSurface === "true"
+      && bodyStyle.position === "fixed"
+      && rootStyle.overscrollBehavior === "none"
+      && rootStyle.touchAction === "pan-y"
+      && canvasStyle.overflowY === "clip"
+      && canvasStyle.touchAction === "pan-y"
+      && transcriptStyle.overscrollBehavior === "contain"
+      && transcriptStyle.touchAction === "pan-y"
+      && document.documentElement.scrollHeight <= document.documentElement.clientHeight + 2;
+  })).toBe(true);
+
+  await scrollArea.evaluate((element) => {
+    element.scrollTop = 240;
+    element.dispatchEvent(new WheelEvent("wheel", { bubbles: true, deltaY: 240 }));
+    window.scrollTo(0, 999);
+    document.documentElement.scrollTop = 999;
+    document.body.scrollTop = 999;
+  });
+
+  await expect.poll(() => scrollArea.evaluate((element) => element.scrollTop > 0)).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+});
+
 test("reading older messages never moves the page or pulls the reader back to the latest reply", async ({ page }) => {
   await seedVisitor(page);
   await page.addInitScript((messages) => {
